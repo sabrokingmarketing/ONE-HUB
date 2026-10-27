@@ -50,7 +50,7 @@ function usePageLabel(portal: Portal) {
   }, [pathname, portal]);
 }
 
-function Sidebar({ portal, onNavigate }: { portal: Portal; onNavigate?: () => void }) {
+function Sidebar({ portal, onNavigate, onSearch }: { portal: Portal; onNavigate?: () => void; onSearch?: () => void }) {
   const me = useMe();
   const can = useCan();
   const navigate = useNavigate();
@@ -61,6 +61,18 @@ function Sidebar({ portal, onNavigate }: { portal: Portal; onNavigate?: () => vo
         <Link to={me.role === "marketing" ? homeFor(me.role) : PORTAL_HOME[portal]} onClick={onNavigate} aria-label="ONE HUB home"><Logo className="h-11" /></Link>
       </div>
       <div className="mx-4 h-px bg-gradient-to-r from-transparent via-zinc-300/70 to-transparent" />
+
+      {onSearch && (
+        <div className="px-3 pt-4">
+          <button
+            onClick={onSearch}
+            className="flex h-11 w-full items-center gap-2.5 rounded-xl bg-white px-3 text-sm text-zinc-400 shadow-soft ring-1 ring-zinc-200/70 transition hover:ring-zinc-300"
+          >
+            <Search className="size-4" />
+            <span>Search ONE HUB…</span>
+          </button>
+        </div>
+      )}
 
       {allowed.length > 1 && (
         <div className="px-3 pt-4" role="tablist" aria-label="Portal">
@@ -174,7 +186,7 @@ export function AppShell() {
         <div className="fixed inset-0 z-50 lg:hidden">
           <div className="absolute inset-0 bg-ink/40 backdrop-blur-sm animate-in" onClick={() => setMobileOpen(false)} />
           <div className="absolute inset-y-0 left-0 w-[85%] max-w-[18rem] bg-canvas shadow-pop animate-in">
-            <Sidebar portal={portal} onNavigate={() => setMobileOpen(false)} />
+            <Sidebar portal={portal} onNavigate={() => setMobileOpen(false)} onSearch={() => { setMobileOpen(false); setPaletteOpen(true); }} />
             <button className="absolute top-4 -right-12 rounded-full bg-white p-2 text-zinc-700 shadow-soft" onClick={() => setMobileOpen(false)} aria-label="Close menu"><X className="size-5" /></button>
           </div>
         </div>
@@ -200,12 +212,12 @@ export function AppShell() {
           <div className="ml-auto flex items-center gap-1 sm:gap-2">
             <button
               onClick={() => setPaletteOpen(true)}
-              className="flex h-10 items-center gap-2.5 rounded-xl bg-white px-3 text-sm text-zinc-400 shadow-soft ring-1 ring-zinc-200/70 transition hover:ring-zinc-300 md:w-64"
+              className="hidden h-10 w-64 items-center gap-2.5 rounded-xl bg-white px-3 text-sm text-zinc-400 shadow-soft ring-1 ring-zinc-200/70 transition hover:ring-zinc-300 lg:flex"
               aria-label="Search"
             >
               <Search className="size-4" />
-              <span className="hidden md:inline">Type here to search…</span>
-              <kbd className="ml-auto hidden rounded-md bg-zinc-100 px-1.5 py-0.5 text-[11px] font-medium text-zinc-500 md:inline">⌘K</kbd>
+              <span>Type here to search…</span>
+              <kbd className="ml-auto rounded-md bg-zinc-100 px-1.5 py-0.5 text-[11px] font-medium text-zinc-500">⌘K</kbd>
             </button>
             <NotificationsPopover unread={unread}>
               <button className="relative grid size-10 place-items-center rounded-xl text-zinc-600 transition hover:bg-white hover:shadow-soft" aria-label={`Notifications (${unread} unread)`}>
