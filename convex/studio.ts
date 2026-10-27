@@ -277,3 +277,31 @@ export const recordDownload = mutation({
     await ctx.db.patch(id, { downloads: a.downloads + 1 });
   },
 });
+
+/** Collections (e.g. a campaign) with file counts and when they last changed. */
+export const collections = query({
+  args: {},
+  handler: async (ctx) => {
+    await requirePermission(ctx, "studio.read");
+    const rows = await ctx.db.query("studioAssets").withIndex("by_archived", (q) => q.eq("archivedAt", undefined)).collect();
+    const map = new Map<string, { name: string; count: number; updatedAt: number; categories: Record<string, number>; coverStorageId?: Id<"_storage"> }>();
+    for (const r of rows) {
+      if (!r.collection) continue;
+      const c = map.get(r.collection) ?? { name: r.collection, count: 0, updatedAt: 0, categories: {} };
+      c.count++;
+      c.updatedAt = Math.max(c.updatedAt, r.updatedAt);
+      c.categories[r.category] = (c.categories[r.category] ?? 0) + 1;
+      if (!c.coverStorageId && (r.coverStorageId || r.contentType.startsWith("image/"))) c.coverStorageId = r.coverStorageId ?? r.storageId;
+      map.set(r.collection, c);
+    }
+    return await Promise.all(
+      [...map.values()]
+        .sort((a, b) => b.updatedAt - a.updatedAt)
+        .map(async ({ coverStorageId, categories, ...c }) => ({
+          ...c,
+          mainCategory: Object.entries(categories).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "Documents",
+          coverUrl: coverStorageId ? await ctx.storage.getUrl(coverStorageId) : null,
+        })),
+    );
+  },
+});

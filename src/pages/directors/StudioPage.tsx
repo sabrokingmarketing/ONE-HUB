@@ -1,20 +1,21 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { useSearchParams } from "react-router-dom";
 import {
   BookOpen, Newspaper, PenTool, Share2, Presentation, Film, Camera, Gem, LayoutTemplate, FileText, Upload, Download,
-  Eye, Star, Pencil, Archive, RotateCcw, Link2, LayoutGrid, List, Play, Loader2, X, Image as ImageIcon, Sparkles, Layers,
+  Eye, Star, Pencil, Archive, RotateCcw, Link2, Play, Loader2, X, Image as ImageIcon, Layers, MoreVertical, Search, Check,
   type LucideIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { FunctionReturnType } from "convex/server";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
-import { SearchInput, EmptyState, Skeleton, Tabs, Avatar } from "@/components/ui/misc";
+import { EmptyState, Skeleton, Avatar } from "@/components/ui/misc";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, Sheet, ConfirmDialog } from "@/components/ui/dialog";
 import { Field, Input, Select, Textarea, Switch } from "@/components/ui/input";
+import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from "@/components/ui/menu";
 import { useAction, useDebounced, uploadFile } from "@/lib/hooks";
 import { useCan } from "@/lib/session";
 import { cn, errorMessage, formatBytes, formatDate, timeAgo } from "@/lib/utils";
@@ -28,8 +29,24 @@ const CATEGORY_ICONS: Record<string, LucideIcon> = {
   Videos: Film, Photography: Camera, "Brand & logos": Gem, Templates: LayoutTemplate, Documents: FileText,
 };
 
+/** Soft, blurred colour fields used as card backdrops — one per category. */
+const GRADIENTS: Record<string, string> = {
+  Booklets: "radial-gradient(120% 95% at 15% 0%, #b9ecfb 0%, #7dd3f0 38%, #e8f8fd 75%, #ffffff 100%)",
+  Brochures: "radial-gradient(120% 95% at 85% 0%, #ffd8a8 0%, #f7931e 40%, #fde3c4 78%, #ffffff 100%)",
+  Designs: "radial-gradient(120% 95% at 20% 10%, #c4b5fd 0%, #8b5cf6 38%, #e4dcfd 76%, #ffffff 100%)",
+  "Social media": "radial-gradient(120% 95% at 80% 10%, #fbcfe8 0%, #f472b6 38%, #fde2f0 76%, #ffffff 100%)",
+  Presentations: "radial-gradient(120% 95% at 15% 10%, #fde68a 0%, #f2c14e 40%, #fbf0cf 78%, #ffffff 100%)",
+  Videos: "radial-gradient(120% 95% at 85% 10%, #a5b4fc 0%, #6366f1 40%, #e0e3fd 78%, #ffffff 100%)",
+  Photography: "radial-gradient(120% 95% at 20% 0%, #fecaca 0%, #f97362 40%, #fde0d9 78%, #ffffff 100%)",
+  "Brand & logos": "radial-gradient(120% 95% at 80% 0%, #ffe4c2 0%, #fca43b 40%, #fff0de 78%, #ffffff 100%)",
+  Templates: "radial-gradient(120% 95% at 15% 10%, #a7f3d0 0%, #34d399 40%, #dcf8ec 78%, #ffffff 100%)",
+  Documents: "radial-gradient(120% 95% at 80% 10%, #e4e4e7 0%, #a1a1aa 40%, #f1f1f3 78%, #ffffff 100%)",
+};
+const gradientFor = (c: string) => GRADIENTS[c] ?? GRADIENTS.Documents;
+
 const kindOf = (t: string): Kind => (t.startsWith("image/") ? "image" : t.startsWith("video/") ? "video" : t === "application/pdf" ? "pdf" : "other");
 const extOf = (name: string, type: string) => (name.includes(".") ? name.split(".").pop()! : type.split("/").pop()!).slice(0, 5).toUpperCase();
+const editedAgo = (ms: number) => `Edited ${timeAgo(ms).replace("just now", "just now")}`;
 
 async function downloadAsset(a: { name: string; url: string | null; contentType: string }) {
   if (!a.url) return toast.error("This file is unavailable.");
@@ -49,181 +66,191 @@ async function downloadAsset(a: { name: string; url: string | null; contentType:
 
 // ---------------------------------------------------------------- page
 
+type Tab = "all" | "collections" | "featured";
+
 export default function StudioPage() {
   const can = useCan();
   const writer = can("studio.write");
   const [params, setParams] = useSearchParams();
   const overview = useQuery(api.studio.overview);
-  const featured = useQuery(api.studio.featured);
+  const collections = useQuery(api.studio.collections);
   const properties = useQuery(api.properties.options, can("properties.read") ? {} : "skip");
+  const tab = (params.get("tab") as Tab) || "all";
   const [category, setCategory] = useState("");
   const [collection, setCollection] = useState("");
   const [kind, setKind] = useState<"" | Kind>("");
   const [sort, setSort] = useState<"newest" | "name" | "popular">("newest");
-  const [tab, setTab] = useState<"library" | "archived">("library");
-  const [view, setView] = useState<"grid" | "list">(() => {
-    try { return (localStorage.getItem("onehub.studio.view") as "grid" | "list") || "grid"; } catch { return "grid"; }
-  });
+  const [showArchived, setShowArchived] = useState(false);
   const [search, setSearch] = useState("");
   const dq = useDebounced(search);
-  const assets = useQuery(api.studio.list, {
+  const assets = useQuery(api.studio.list, tab === "collections" && !collection ? "skip" : {
     search: dq || undefined, category: category || undefined, collection: collection || undefined,
-    kind: kind || undefined, sort, archived: tab === "archived",
+    kind: kind || undefined, sort, archived: showArchived,
   });
+  const featured = useQuery(api.studio.featured, tab === "featured" ? {} : "skip");
   const [uploadOpen, setUploadOpen] = useState(false);
   const [editing, setEditing] = useState<Asset | null>(null);
   const [replacing, setReplacing] = useState<Asset | null>(null);
   const openId = params.get("asset") as Id<"studioAssets"> | null;
   const recordDownload = useMutation(api.studio.recordDownload);
 
-  useEffect(() => {
-    try { localStorage.setItem("onehub.studio.view", view); } catch { /* ignore */ }
-  }, [view]);
-
+  const setTab = (t: Tab) => { const p = new URLSearchParams(params); p.set("tab", t); p.delete("asset"); setParams(p); setCollection(""); };
   const open = (id: Id<"studioAssets">) => { params.set("asset", id); setParams(params); };
   const download = (a: Asset) => { void recordDownload({ id: a._id }); void downloadAsset(a); };
-  const filtersOn = !!(category || collection || kind || dq);
+  const resetFilters = () => { setCategory(""); setCollection(""); setKind(""); setSearch(""); setShowArchived(false); };
+  const filtersOn = !!(category || collection || kind || dq || showArchived);
+  const shown = tab === "featured" ? featured : assets;
 
   return (
-    <div className="space-y-5">
-      {/* Hero */}
-      <section className="relative overflow-hidden rounded-2xl bg-ink p-6 text-white sm:p-8">
-        <div className="pointer-events-none absolute -top-40 -right-40 size-80 rounded-full border-[40px] border-brand-500/20" />
-        <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-          <div className="max-w-xl">
-            <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold tracking-wide text-brand-300"><Sparkles className="size-3.5" /> Marketing Studio</div>
-            <h1 className="mt-3 text-2xl font-semibold tracking-tight sm:text-[28px]">Every booklet, brochure and design — in one place.</h1>
-            <p className="mt-2 text-sm text-zinc-400">The marketing team's approved material for ONE Property Holdings. Preview anything in the browser and download the latest version in one click.</p>
-          </div>
-          <div className="flex flex-wrap items-end gap-6">
-            {overview && (
-              <dl className="grid grid-cols-3 gap-6 text-sm">
-                <div><dt className="text-zinc-400">Files</dt><dd className="mt-1 text-2xl font-bold tabular-nums">{overview.total}</dd></div>
-                <div><dt className="text-zinc-400">New this week</dt><dd className="mt-1 text-2xl font-bold tabular-nums">{overview.newThisWeek}</dd></div>
-                <div><dt className="text-zinc-400">Downloads</dt><dd className="mt-1 text-2xl font-bold tabular-nums">{overview.downloads}</dd></div>
-              </dl>
-            )}
-            {writer && <Button size="lg" onClick={() => setUploadOpen(true)}><Upload /> Upload material</Button>}
-          </div>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-[26px] font-bold tracking-tight text-zinc-900">Marketing Studio</h1>
+          <p className="mt-1 text-sm text-zinc-500">
+            {overview ? `${overview.total} files · ${overview.newThisWeek} new this week` : "Booklets, brochures, designs and more from the marketing team"}
+          </p>
         </div>
-      </section>
+        {writer && <Button size="lg" onClick={() => setUploadOpen(true)}><Upload /> Upload</Button>}
+      </div>
 
-      {/* Categories — ten equal tiles */}
-      <section aria-label="Categories" className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-        {(overview?.categories ?? Array.from({ length: 10 }, (_, i) => ({ key: String(i), hint: "", count: 0 }))).map((c) => {
-          const Icon = CATEGORY_ICONS[c.key] ?? FileText;
-          const active = category === c.key;
-          if (!overview) return <Skeleton key={c.key} className="h-[104px] rounded-2xl" />;
-          return (
-            <button
-              key={c.key}
-              onClick={() => setCategory(active ? "" : c.key)}
-              aria-pressed={active}
-              className={cn(
-                "group flex h-[104px] flex-col justify-between rounded-2xl p-4 text-left transition-all",
-                active ? "bg-brand-500 text-white shadow-soft" : "bg-white shadow-card hover:-translate-y-0.5 hover:shadow-pop",
-              )}
-            >
-              <div className="flex items-start justify-between">
-                <span className={cn("grid size-9 place-items-center rounded-xl", active ? "bg-white text-zinc-900" : "bg-brand-50 text-brand-600")}><Icon className="size-[18px]" /></span>
-                <span className={cn("text-lg font-bold tabular-nums", active ? "text-white" : "text-zinc-900")}>{c.count}</span>
-              </div>
-              <div className="min-w-0">
-                <div className="truncate text-sm font-semibold">{c.key}</div>
-                <div className={cn("truncate text-xs", active ? "text-white/80" : "text-zinc-500")}>{c.hint}</div>
-              </div>
-            </button>
-          );
-        })}
-      </section>
+      {/* Underline tabs */}
+      <nav className="flex gap-7 border-b border-zinc-200" role="tablist">
+        {([["all", "All files"], ["collections", "Collections"], ["featured", "Featured"]] as const).map(([v, label]) => (
+          <button key={v} role="tab" aria-selected={tab === v} onClick={() => setTab(v)}
+            className={cn("-mb-px border-b-2 pb-3 text-sm font-semibold transition-colors", tab === v ? "border-brand-500 text-zinc-900" : "border-transparent text-zinc-500 hover:text-zinc-800")}>
+            {label}
+          </button>
+        ))}
+      </nav>
 
-      {/* Featured */}
-      {!filtersOn && tab === "library" && featured && featured.length > 0 && (
-        <section>
-          <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-zinc-900"><Star className="size-4 fill-brand-500 text-brand-500" /> Featured by marketing</div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {featured.slice(0, 4).map((a) => <AssetCard key={a._id} a={a} onOpen={() => open(a._id)} onDownload={() => download(a)} />)}
-          </div>
-        </section>
-      )}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[272px_minmax(0,1fr)]">
+        {/* Filter panel */}
+        <aside className="flex min-w-0 flex-col gap-3 self-start rounded-3xl bg-white p-4 shadow-card lg:sticky lg:top-24 lg:gap-5">
+          <label className="relative block">
+            <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-zinc-400" />
+            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search files"
+              className="h-11 w-full rounded-2xl bg-zinc-100/80 pr-3 pl-10 text-sm outline-none placeholder:text-zinc-400 focus:bg-white focus:ring-2 focus:ring-brand-500/50" />
+          </label>
 
-      {/* Library */}
-      <div className="flex items-center gap-2 pt-1 text-sm font-semibold text-zinc-900"><Layers className="size-4 text-zinc-400" /> {category || "All material"}</div>
-      <section className="flex flex-col gap-3 rounded-2xl bg-white p-3 shadow-card lg:flex-row lg:items-center">
-        {writer && <Tabs value={tab} onChange={setTab} items={[{ value: "library", label: "Library" }, { value: "archived", label: "Archived" }]} />}
-        <SearchInput className="lg:w-72" value={search} onChange={setSearch} placeholder="Search name, tag, collection…" />
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:flex lg:flex-1 lg:justify-end">
-          <Select aria-label="Collection" className="lg:w-44" value={collection} onChange={(e) => setCollection(e.target.value)}>
-            <option value="">All collections</option>
-            {overview?.collections.map((c) => <option key={c}>{c}</option>)}
-          </Select>
-          <Select aria-label="File type" className="lg:w-36" value={kind} onChange={(e) => setKind(e.target.value as "" | Kind)}>
-            <option value="">All types</option><option value="pdf">PDFs</option><option value="image">Images</option><option value="video">Videos</option><option value="other">Other files</option>
-          </Select>
-          <Select aria-label="Sort" className="lg:w-40" value={sort} onChange={(e) => setSort(e.target.value as typeof sort)}>
-            <option value="newest">Newest first</option><option value="name">Name A–Z</option><option value="popular">Most downloaded</option>
-          </Select>
-          <div className="hidden items-center gap-1 rounded-xl bg-zinc-100 p-1 sm:flex">
-            {(["grid", "list"] as const).map((v) => (
-              <button key={v} onClick={() => setView(v)} aria-label={`${v} view`} aria-pressed={view === v} className={cn("grid size-8 place-items-center rounded-lg transition", view === v ? "bg-white text-zinc-900 shadow-soft" : "text-zinc-500 hover:text-zinc-900")}>
-                {v === "grid" ? <LayoutGrid className="size-4" /> : <List className="size-4" />}
+          {/* Mobile: compact category chips */}
+          <div className="scrollbar-none -mx-4 flex gap-2 overflow-x-auto px-4 lg:hidden">
+            {[{ key: "", count: overview?.total ?? 0 }, ...(overview?.categories ?? [])].map((c) => (
+              <button key={c.key || "all"} onClick={() => { setCategory(c.key); if (tab === "collections") setTab("all"); }}
+                className={cn("h-9 shrink-0 rounded-full px-3.5 text-[13px] font-semibold transition", category === c.key ? "bg-ink text-white" : "bg-zinc-100 text-zinc-600")}>
+                {c.key || "All"} <span className="opacity-60">{c.count}</span>
               </button>
             ))}
           </div>
-        </div>
-      </section>
 
-      {filtersOn && (
-        <div className="flex flex-wrap items-center gap-2 text-sm">
-          <span className="text-zinc-500">{assets?.length ?? "…"} result(s)</span>
-          {category && <FilterChip label={category} onClear={() => setCategory("")} />}
-          {collection && <FilterChip label={collection} onClear={() => setCollection("")} />}
-          {kind && <FilterChip label={kind.toUpperCase()} onClear={() => setKind("")} />}
-          {dq && <FilterChip label={`“${dq}”`} onClear={() => setSearch("")} />}
-        </div>
-      )}
+          <div className="hidden lg:block">
+            <div className="mb-1.5 px-1 text-xs font-medium text-zinc-500">Sort by</div>
+            <Select value={sort} onChange={(e) => setSort(e.target.value as typeof sort)} className="h-11 rounded-2xl bg-zinc-100/80 ring-0">
+              <option value="newest">Last updated</option><option value="name">Name A–Z</option><option value="popular">Most downloaded</option>
+            </Select>
+          </div>
 
-      {/* Library */}
-      {assets === undefined ? (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">{Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-[300px] rounded-2xl" />)}</div>
-      ) : assets.length === 0 ? (
-        <div className="rounded-2xl bg-white shadow-card">
-          <EmptyState icon={Layers} title={filtersOn ? "Nothing matches these filters" : tab === "archived" ? "No archived files" : "The studio is empty"}
-            description={filtersOn ? "Try another category or clear the search." : writer ? "Upload booklets, brochures, designs and more — directors see them instantly." : "The marketing team hasn't uploaded material yet."}
-            action={!filtersOn && writer && tab === "library" ? <Button onClick={() => setUploadOpen(true)}><Upload /> Upload material</Button> : undefined} />
-        </div>
-      ) : view === "grid" ? (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {assets.map((a) => <AssetCard key={a._id} a={a} onOpen={() => open(a._id)} onDownload={() => download(a)} />)}
-        </div>
-      ) : (
-        <div className="overflow-hidden rounded-2xl bg-white shadow-card">
-          <table className="w-full text-sm">
-            <thead className="border-b border-zinc-100 text-left text-[11px] font-bold tracking-wider text-zinc-400 uppercase">
-              <tr><th className="px-5 py-3">File</th><th className="hidden px-5 py-3 md:table-cell">Category</th><th className="hidden px-5 py-3 lg:table-cell">Size</th><th className="hidden px-5 py-3 lg:table-cell">Added</th><th className="px-5 py-3 text-right">Actions</th></tr>
-            </thead>
-            <tbody>
-              {assets.map((a) => (
-                <tr key={a._id} className="border-t border-zinc-100 hover:bg-zinc-50/60">
-                  <td className="px-5 py-3">
-                    <button onClick={() => open(a._id)} className="flex items-center gap-3 text-left">
-                      <Thumb a={a} className="size-11 shrink-0 rounded-lg" small />
-                      <span className="min-w-0"><span className="block truncate font-semibold text-zinc-900">{a.name}</span><span className="block truncate text-xs text-zinc-500">{a.collection ?? a.description ?? "—"}</span></span>
-                    </button>
-                  </td>
-                  <td className="hidden px-5 py-3 text-zinc-600 md:table-cell">{a.category}</td>
-                  <td className="hidden px-5 py-3 text-zinc-500 lg:table-cell">{formatBytes(a.size)}</td>
-                  <td className="hidden px-5 py-3 text-zinc-500 lg:table-cell">{timeAgo(a._creationTime)}</td>
-                  <td className="px-5 py-3"><div className="flex justify-end gap-1">
-                    <Button size="icon-sm" variant="ghost" onClick={() => open(a._id)} aria-label="Preview"><Eye /></Button>
-                    <Button size="icon-sm" variant="ghost" onClick={() => download(a)} aria-label="Download"><Download /></Button>
-                  </div></td>
-                </tr>
+          <div className="hidden lg:block">
+            <div className="mb-1.5 px-1 text-xs font-medium text-zinc-500">File type</div>
+            <div className="grid grid-cols-2 gap-1.5">
+              {([["", "All"], ["pdf", "PDF"], ["image", "Images"], ["video", "Video"]] as const).map(([v, label]) => (
+                <button key={label} onClick={() => setKind(v)} className={cn("h-9 rounded-xl text-[13px] font-semibold transition", kind === v ? "bg-ink text-white" : "bg-zinc-100/80 text-zinc-600 hover:bg-zinc-200/70")}>{label}</button>
               ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+            </div>
+          </div>
+
+          <div className="hidden lg:block">
+            <div className="mb-1.5 px-1 text-xs font-medium text-zinc-500">Categories</div>
+            <ul className="space-y-0.5">
+              {[{ key: "", count: overview?.total ?? 0 }, ...(overview?.categories ?? [])].map((c) => {
+                const Icon = c.key ? CATEGORY_ICONS[c.key] ?? FileText : Layers;
+                const active = category === c.key;
+                return (
+                  <li key={c.key || "all"}>
+                    <button onClick={() => { setCategory(c.key); if (tab === "collections") setTab("all"); }}
+                      className={cn("flex w-full items-center gap-3 rounded-xl px-2.5 py-2 text-left text-[13px] transition", active ? "bg-brand-50 font-semibold text-brand-800" : "text-zinc-600 hover:bg-zinc-50")}>
+                      <Icon className={cn("size-4", active ? "text-brand-600" : "text-zinc-400")} />
+                      <span className="flex-1 truncate">{c.key || "All files"}</span>
+                      <span className={cn("text-xs tabular-nums", active ? "text-brand-700" : "text-zinc-400")}>{c.count}</span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+
+          {collections && collections.length > 0 && (
+            <div className="hidden lg:block">
+              <div className="mb-1.5 px-1 text-xs font-medium text-zinc-500">Collections</div>
+              <div className="space-y-1.5 rounded-2xl border border-zinc-100 p-1.5">
+                {collections.slice(0, 5).map((c) => (
+                  <button key={c.name} onClick={() => { setCollection(collection === c.name ? "" : c.name); if (tab !== "all") setTab("all"); }}
+                    className={cn("flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left transition", collection === c.name ? "bg-brand-50" : "hover:bg-zinc-50")}>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[13px] font-semibold text-zinc-900">{c.name}</span>
+                      <span className="block text-xs text-zinc-400">{formatDate(c.updatedAt, { day: "numeric", month: "short", year: "numeric" })} · {c.count} files</span>
+                    </span>
+                    {collection === c.name && <Check className="size-4 text-brand-600" />}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {writer && (
+            <label className="hidden items-center justify-between gap-3 px-1 text-[13px] text-zinc-600 lg:flex">
+              Show archived <Switch checked={showArchived} onChange={setShowArchived} label="Show archived" />
+            </label>
+          )}
+
+          {writer ? (
+            <Button className="mt-1 hidden h-11 w-full rounded-2xl lg:inline-flex" onClick={() => setUploadOpen(true)}><Upload /> Upload material</Button>
+          ) : filtersOn ? (
+            <Button variant="secondary" className="h-11 w-full rounded-2xl" onClick={resetFilters}>Clear filters</Button>
+          ) : null}
+        </aside>
+
+        {/* Content */}
+        <section className="min-w-0 rounded-3xl bg-white/60 p-3 ring-1 ring-zinc-200/60 sm:p-4">
+          {(filtersOn || tab === "featured") && tab !== "collections" && (
+            <div className="mb-3 flex flex-wrap items-center gap-2 px-1 text-sm">
+              <span className="font-semibold text-zinc-900">{tab === "featured" ? "Featured by marketing" : category || collection || "All files"}</span>
+              <span className="text-zinc-400">· {shown?.length ?? "…"}</span>
+              {filtersOn && <button onClick={resetFilters} className="ml-auto inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-xs font-semibold text-zinc-600 shadow-soft hover:text-zinc-900"><X className="size-3" /> Clear</button>}
+            </div>
+          )}
+
+          {tab === "collections" && !collection ? (
+            collections === undefined ? <CardGridSkeleton /> : collections.length === 0 ? (
+              <EmptyState icon={Layers} title="No collections yet" description={writer ? "Give uploads a collection name (e.g. “Spring 2026”) to group them here." : "The marketing team hasn't grouped any material yet."} />
+            ) : (
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 2xl:grid-cols-3">
+                {collections.map((c) => (
+                  <Tile key={c.name} title={c.name} subtitle={`${c.count} files · ${editedAgo(c.updatedAt)}`} gradient={gradientFor(c.mainCategory)} coverUrl={c.coverUrl}
+                    icon={<GlassFolder />} badgeIcon={Layers} onOpen={() => setCollection(c.name)} />
+                ))}
+              </div>
+            )
+          ) : shown === undefined ? <CardGridSkeleton /> : shown.length === 0 ? (
+            <EmptyState icon={Layers}
+              title={filtersOn ? "Nothing matches these filters" : tab === "featured" ? "Nothing featured yet" : "The studio is empty"}
+              description={filtersOn ? "Try another category or clear the search." : writer ? "Upload booklets, brochures, designs and more — directors see them instantly." : "The marketing team hasn't uploaded material yet."}
+              action={writer && !filtersOn ? <Button onClick={() => setUploadOpen(true)}><Upload /> Upload material</Button> : filtersOn ? <Button variant="secondary" onClick={resetFilters}>Clear filters</Button> : undefined} />
+          ) : (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 2xl:grid-cols-3">
+              {shown.map((a) => (
+                <Tile key={a._id} title={a.name} subtitle={editedAgo(a.updatedAt)} gradient={gradientFor(a.category)}
+                  coverUrl={a.coverUrl ?? (kindOf(a.contentType) === "image" ? a.url : null)}
+                  video={kindOf(a.contentType) === "video" && !a.coverUrl ? a.url : null}
+                  icon={<GlassFile ext={extOf(a.name, a.contentType)} />} badgeIcon={CATEGORY_ICONS[a.category] ?? FileText}
+                  flags={<>{a.featured && <span className="grid size-7 place-items-center rounded-full bg-white/90 text-brand-500 shadow-soft backdrop-blur"><Star className="size-3.5 fill-current" /></span>}{Date.now() - a._creationTime < 7 * 86400_000 && <span className="rounded-full bg-white/90 px-2.5 py-1 text-[11px] font-bold text-zinc-800 shadow-soft backdrop-blur">New</span>}</>}
+                  onOpen={() => open(a._id)}
+                  menu={<AssetMenu a={a} writer={writer} onOpen={() => open(a._id)} onDownload={() => download(a)} onEdit={() => setEditing(a)} onReplace={() => setReplacing(a)} />} />
+              ))}
+            </div>
+          )}
+        </section>
+      </div>
 
       {openId && <PreviewDialog id={openId} writer={writer} onClose={() => { params.delete("asset"); setParams(params); }} onDownload={download}
         onEdit={(a) => setEditing(a)} onReplace={(a) => setReplacing(a)} />}
@@ -233,65 +260,99 @@ export default function StudioPage() {
   );
 }
 
-function FilterChip({ label, onClear }: { label: string; onClear: () => void }) {
-  return (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-white py-1 pr-1.5 pl-3 text-xs font-semibold text-zinc-700 shadow-soft">
-      {label}
-      <button onClick={onClear} className="grid size-5 place-items-center rounded-full hover:bg-zinc-100" aria-label={`Clear ${label}`}><X className="size-3" /></button>
-    </span>
-  );
+function CardGridSkeleton() {
+  return <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 2xl:grid-cols-3">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-[300px] rounded-3xl" />)}</div>;
 }
 
 // ---------------------------------------------------------------- cards & previews
 
-function Thumb({ a, className, small }: { a: Pick<Asset, "name" | "contentType" | "url" | "coverUrl" | "category">; className?: string; small?: boolean }) {
-  const kind = kindOf(a.contentType);
-  const Icon = CATEGORY_ICONS[a.category] ?? FileText;
-  const src = a.coverUrl ?? (kind === "image" ? a.url : null);
+/** Frosted-glass folder glyph that sits on the gradient backdrop. */
+function GlassFolder() {
   return (
-    <div className={cn("relative overflow-hidden bg-zinc-100", className)}>
-      {src ? (
-        <img src={src} alt="" loading="lazy" className="size-full object-cover" />
-      ) : kind === "video" && a.url ? (
-        <video src={`${a.url}#t=0.5`} muted preload="metadata" className="size-full object-cover" />
-      ) : (
-        <div className="grid size-full place-items-center bg-gradient-to-br from-zinc-50 to-zinc-200/70">
-          <div className="flex flex-col items-center gap-2">
-            <Icon className={cn("text-zinc-400", small ? "size-5" : "size-9")} />
-            {!small && <span className="rounded-md bg-white px-2 py-0.5 text-[11px] font-bold tracking-wide text-zinc-600 shadow-soft">{extOf(a.name, a.contentType)}</span>}
-          </div>
-        </div>
-      )}
-      {kind === "video" && !small && (
-        <span className="absolute inset-0 grid place-items-center"><span className="grid size-11 place-items-center rounded-full bg-white/90 text-zinc-900 shadow-pop"><Play className="ml-0.5 size-4 fill-current" /></span></span>
-      )}
+    <svg viewBox="0 0 120 96" className="w-[104px] drop-shadow-[0_18px_28px_rgba(24,24,27,0.18)]" aria-hidden>
+      <path d="M10 18a10 10 0 0 1 10-10h26c3 0 5.6 1.3 7.5 3.6L60 20h40a10 10 0 0 1 10 10v48a10 10 0 0 1-10 10H20A10 10 0 0 1 10 78Z" fill="rgba(255,255,255,0.55)" stroke="rgba(255,255,255,0.9)" strokeWidth="1.5" />
+      <path d="M10 34a10 10 0 0 1 10-10h80a10 10 0 0 1 10 10v44a10 10 0 0 1-10 10H20A10 10 0 0 1 10 78Z" fill="rgba(255,255,255,0.72)" stroke="rgba(255,255,255,0.95)" strokeWidth="1.5" />
+    </svg>
+  );
+}
+
+/** Frosted-glass document glyph with the file extension. */
+function GlassFile({ ext }: { ext: string }) {
+  return (
+    <div className="relative drop-shadow-[0_18px_28px_rgba(24,24,27,0.18)]">
+      <svg viewBox="0 0 88 108" className="w-[78px]" aria-hidden>
+        <path d="M14 4h40l26 26v64a10 10 0 0 1-10 10H14A10 10 0 0 1 4 94V14A10 10 0 0 1 14 4Z" fill="rgba(255,255,255,0.7)" stroke="rgba(255,255,255,0.95)" strokeWidth="1.5" />
+        <path d="M54 4v18a8 8 0 0 0 8 8h18" fill="rgba(255,255,255,0.85)" stroke="rgba(255,255,255,0.95)" strokeWidth="1.5" />
+      </svg>
+      <span className="absolute inset-x-0 bottom-5 text-center text-[11px] font-bold tracking-wider text-zinc-700/80">{ext}</span>
     </div>
   );
 }
 
-function AssetCard({ a, onOpen, onDownload }: { a: Asset; onOpen: () => void; onDownload: () => void }) {
-  const isNew = Date.now() - a._creationTime < 7 * 86400_000;
+function Tile({ title, subtitle, gradient, coverUrl, video, icon, badgeIcon: BadgeIcon, flags, onOpen, menu }: {
+  title: string; subtitle: string; gradient: string; coverUrl?: string | null; video?: string | null; icon: React.ReactNode; badgeIcon: LucideIcon;
+  flags?: React.ReactNode; onOpen: () => void; menu?: React.ReactNode;
+}) {
   return (
-    <article className="group flex h-[300px] flex-col overflow-hidden rounded-2xl bg-white shadow-card transition-all hover:-translate-y-0.5 hover:shadow-pop">
-      <button onClick={onOpen} className="relative h-[160px] shrink-0 text-left" aria-label={`Preview ${a.name}`}>
-        <Thumb a={a} className="size-full" />
-        <div className="absolute top-3 left-3 flex gap-1.5">
-          {isNew && <Badge tone="brand" className="bg-brand-500 text-white ring-0">New</Badge>}
-          {a.featured && <span className="grid size-6 place-items-center rounded-full bg-white text-brand-500 shadow-soft"><Star className="size-3.5 fill-current" /></span>}
-        </div>
-        <span className="absolute inset-0 grid place-items-center bg-ink/0 opacity-0 transition group-hover:bg-ink/35 group-hover:opacity-100">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-zinc-900 shadow-pop"><Eye className="size-3.5" /> Preview</span>
-        </span>
+    <article className="group flex h-[300px] flex-col overflow-hidden rounded-3xl bg-white shadow-card ring-1 ring-zinc-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-pop">
+      <button onClick={onOpen} className="relative m-2 mb-0 flex-1 overflow-hidden rounded-[20px] text-left" aria-label={`Open ${title}`}>
+        <div className="absolute inset-0 transition-transform duration-500 group-hover:scale-105" style={{ background: gradient }} />
+        <div className="absolute inset-0 bg-[radial-gradient(60%_60%_at_50%_100%,rgba(255,255,255,0.55),transparent)]" />
+        {coverUrl ? (
+          <img src={coverUrl} alt="" loading="lazy" className="absolute inset-0 size-full object-cover transition-transform duration-500 group-hover:scale-105" />
+        ) : video ? (
+          <video src={`${video}#t=0.5`} muted preload="metadata" className="absolute inset-0 size-full object-cover" />
+        ) : (
+          <div className="absolute inset-0 grid place-items-center transition-transform duration-500 group-hover:scale-105">{icon}</div>
+        )}
+        {video && <span className="absolute inset-0 grid place-items-center"><span className="grid size-12 place-items-center rounded-full bg-white/90 text-zinc-900 shadow-pop backdrop-blur"><Play className="ml-0.5 size-4 fill-current" /></span></span>}
+        {flags && <div className="absolute top-3 left-3 flex items-center gap-1.5">{flags}</div>}
       </button>
-      <div className="flex min-h-0 flex-1 flex-col px-4 pt-3.5 pb-4">
-        <div className="text-[11px] font-bold tracking-wider text-brand-600 uppercase">{a.category}{a.versionNumber > 1 && <span className="ml-1.5 text-zinc-400">v{a.versionNumber}</span>}</div>
-        <button onClick={onOpen} className="mt-1 line-clamp-2 text-left text-sm leading-5 font-semibold text-zinc-900 hover:text-brand-700" title={a.name}>{a.name}</button>
-        <div className="mt-auto flex items-center justify-between gap-2 pt-3">
-          <span className="truncate text-xs text-zinc-500">{extOf(a.name, a.contentType)} · {formatBytes(a.size)} · {timeAgo(a._creationTime)}</span>
-          <Button size="icon-sm" variant="secondary" onClick={onDownload} aria-label={`Download ${a.name}`}><Download /></Button>
-        </div>
+      <div className="flex items-center gap-3 px-4 py-3.5">
+        <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-brand-500 text-white shadow-soft"><BadgeIcon className="size-[18px]" /></span>
+        <button onClick={onOpen} className="min-w-0 flex-1 text-left">
+          <span className="block truncate text-sm font-semibold text-zinc-900" title={title}>{title}</span>
+          <span className="block truncate text-xs text-zinc-400">{subtitle}</span>
+        </button>
+        {menu}
       </div>
     </article>
+  );
+}
+
+function AssetMenu({ a, writer, onOpen, onDownload, onEdit, onReplace }: { a: Asset; writer: boolean; onOpen: () => void; onDownload: () => void; onEdit: () => void; onReplace: () => void }) {
+  const [setFeatured] = useAction(api.studio.setFeatured);
+  const [setArchived] = useAction(api.studio.setArchived, { success: a.archivedAt ? "Restored" : "Archived" });
+  return (
+    <Menu>
+      <MenuTrigger className="grid size-9 shrink-0 place-items-center rounded-xl bg-zinc-50 text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-900" aria-label={`Actions for ${a.name}`}>
+        <MoreVertical className="size-4" />
+      </MenuTrigger>
+      <MenuContent>
+        <MenuItem onSelect={onOpen}><Eye /> Preview</MenuItem>
+        <MenuItem onSelect={onDownload}><Download /> Download</MenuItem>
+        <MenuItem onSelect={() => void copy(`${window.location.origin}/directors/studio?asset=${a._id}`, "Link copied")}><Link2 /> Copy link</MenuItem>
+        {writer && (
+          <>
+            <MenuSeparator />
+            <MenuItem onSelect={onEdit}><Pencil /> Edit details</MenuItem>
+            <MenuItem onSelect={onReplace}><Upload /> Upload new version</MenuItem>
+            {!a.archivedAt && <MenuItem onSelect={() => void setFeatured({ id: a._id, featured: !a.featured })}><Star /> {a.featured ? "Remove from featured" : "Feature"}</MenuItem>}
+            <MenuItem danger={!a.archivedAt} onSelect={() => void setArchived({ id: a._id, archived: !a.archivedAt })}>{a.archivedAt ? <><RotateCcw /> Restore</> : <><Archive /> Archive</>}</MenuItem>
+          </>
+        )}
+      </MenuContent>
+    </Menu>
+  );
+}
+
+/** Small preview used inside the preview dialog when no in-browser viewer exists. */
+function Thumb({ a, className }: { a: Pick<Asset, "name" | "contentType" | "url" | "coverUrl" | "category">; className?: string }) {
+  const src = a.coverUrl ?? (kindOf(a.contentType) === "image" ? a.url : null);
+  return (
+    <div className={cn("relative grid place-items-center overflow-hidden", className)} style={{ background: gradientFor(a.category) }}>
+      {src ? <img src={src} alt="" className="absolute inset-0 size-full object-cover" /> : <GlassFile ext={extOf(a.name, a.contentType)} />}
+    </div>
   );
 }
 
