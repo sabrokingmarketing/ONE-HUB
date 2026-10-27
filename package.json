@@ -8,9 +8,11 @@
     "dev:frontend": "vite",
     "dev:backend": "convex dev",
     "build": "tsc -b && vite build",
-    "typecheck": "tsc -b && tsc -p convex --noEmit",
-    "lint": "eslint .",
+    "typecheck": "tsc -b && tsc -p convex --noEmit && tsc -p tsconfig.sw.json",
     "test": "vitest run",
+    "codegen:offline": "node scripts/offline-codegen.mjs",
+    "icons": "node scripts/generate-icons.mjs",
+    "ui-harness": "vite --config scripts/ui-harness/vite.config.ts",
     "preview": "vite preview"
   },
   "devDependencies": {
@@ -55,8 +57,16 @@
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "react-router-dom": "^7.18.4",
+    "read-excel-file": "^9.3.12",
     "recharts": "^3.10.1",
     "sonner": "^2.0.8",
-    "tailwind-merge": "^3.7.0"
+    "tailwind-merge": "^3.7.0",
+    "workbox-core": "^7.4.1",
+    "workbox-precaching": "^7.4.1",
+    "workbox-routing": "^7.4.1",
+    "workbox-strategies": "^7.4.1"
+  },
+  "engines": {
+    "node": ">=20"
   }
 }
