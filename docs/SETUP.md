@@ -57,9 +57,9 @@ webhook, environment variables and the controlled test plan. In short:
 ```bash
 npx convex env set RESEND_API_KEY 're_…'            # ONE HUB's own key, "Sending access"
 npx convex env set RESEND_WEBHOOK_SECRET 'whsec_…'  # webhook → https://<deployment>.convex.site/resend/webhook
-npx convex env set ONEHUB_EMAIL_FROM '"ONE Property Holdings | Internal Communications" <notifications@hub.oneholdings.co.za>'
+npx convex env set ONEHUB_EMAIL_FROM '"ONE Property Holdings | Internal Communications" <notifications@mailoneholdings.co.za>'
 npx convex env set ONEHUB_EMAIL_MODE test                  # log | test | live
-npx convex env set ONEHUB_EMAIL_TEST_RECIPIENT approved-person@oneholdings.co.za
+npx convex env set ONEHUB_EMAIL_TEST_RECIPIENT approved-test-address
 ```
 `log` (default) sends nothing. `test` redirects every email to the test inbox. Switch to `live`
 only after the owners approve real sends.

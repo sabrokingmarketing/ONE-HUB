@@ -30,32 +30,35 @@ Steps marked **(you)** need a person: email verification, CAPTCHA, login and DNS
 
 ## 2. Add the sending domain (you approve, then add DNS)
 
-Recommended sender: **`notifications@hub.oneholdings.co.za`**, display name
-**ONE Property Holdings | Internal Communications**.
+ONE HUB's sending domain is **`mailoneholdings.co.za`**. It was bought only for ONE HUB email, so it's used
+directly; there's no website or mailbox on it to protect.
 
-First confirm that ONE Property Holdings owns `oneholdings.co.za` and that you can edit its DNS (in Cloudflare,
-or wherever its nameservers point). If the company domain is different, use `hub.<company-domain>`.
+- Sender: **`notifications@mailoneholdings.co.za`**
+- Display name: **ONE Property Holdings | Internal Communications**
 
-1. Resend → **Domains → Add domain** → `hub.oneholdings.co.za`. Pick region **eu-west-1 (Ireland)**, the
-   closest to South Africa.
+1. Resend (the **new** ONE HUB account) → **Domains → Add domain** → `mailoneholdings.co.za`. Pick region
+   **eu-west-1 (Ireland)**, the closest to South Africa.
 2. Resend then shows the exact records. They normally look like this. **Copy the values from Resend, not
    from here.**
 
-| Type | Name (in the `oneholdings.co.za` zone) | Value | Purpose |
+| Type | Name (host) | Value | Purpose |
 |---|---|---|---|
-| TXT | `resend._domainkey.hub` | `p=MIGfMA0G…` (unique key from Resend) | DKIM signature |
-| MX | `send.hub` | `feedback-smtp.eu-west-1.amazonses.com`, priority `10` | Bounce handling (Return-Path) |
-| TXT | `send.hub` | `v=spf1 include:amazonses.com ~all` | SPF for the Return-Path domain |
-| TXT *(optional)* | `_dmarc.hub` | `v=DMARC1; p=none; rua=mailto:dmarc@oneholdings.co.za` | Only if the root domain has no DMARC record. Check first |
+| TXT | `resend._domainkey` | `p=MIGfMA0G…` (unique key from Resend) | DKIM signature |
+| MX | `send` | `feedback-smtp.eu-west-1.amazonses.com`, priority `10` | Bounce handling (Return-Path) |
+| TXT | `send` | `v=spf1 include:amazonses.com ~all` | SPF for the Return-Path domain |
+| TXT | `_dmarc` | `v=DMARC1; p=none;` | DMARC. Gmail and Yahoo expect one. Tighten to `p=quarantine` after a few weeks of clean sending |
 
-Why these records are safe:
-- They are all **new names** under `hub.` and `send.hub.`. The root SPF/MX records for `oneholdings.co.za`,
-  and so your normal company email, are **not touched**.
-- They don't clash with a website CNAME on `hub.oneholdings.co.za`. That record is on `hub` itself, and
-  these are on `resend._domainkey.hub` and `send.hub`.
+Some DNS panels want the full name instead of the host part, for example
+`resend._domainkey.mailoneholdings.co.za`. If yours adds the domain automatically, enter only the host
+(`resend._domainkey`). Otherwise it ends up as `resend._domainkey.mailoneholdings.co.za.mailoneholdings.co.za`.
 
-3. **Cloudflare (you):** before adding anything, export or screenshot the current DNS zone. Then add only the
-   records above. Leave the proxy off (grey cloud). TXT and MX records can't be proxied anyway.
+Notes:
+- `mailoneholdings.co.za` has no mailbox, so replies to `notifications@` would be lost. Set
+  `ONEHUB_EMAIL_REPLY_TO` (step 5) to a mailbox someone reads.
+- Leave any records your registrar created (default A records, parking page) as they are. Only add the ones above.
+
+3. **DNS (you):** add the records at whoever manages `mailoneholdings.co.za`'s DNS (your registrar, or
+   Cloudflare if you moved its nameservers there). In Cloudflare, leave the proxy off (grey cloud).
 4. In Resend, click **Verify DNS records**. Propagation usually takes minutes, sometimes a few hours. The
    domain must show **Verified** before you continue.
 
@@ -64,7 +67,7 @@ Why these records are safe:
 Resend → **API Keys → Create API key**
 - Name: `one-hub-production`
 - Permission: **Sending access**
-- Domain: `hub.oneholdings.co.za` only
+- Domain: `mailoneholdings.co.za` only
 
 Copy the key once. Paste it straight into the command in step 5, never anywhere else.
 
@@ -88,10 +91,10 @@ that deployment and can't affect any other app.
 ```bash
 npx convex env set RESEND_API_KEY 're_…'                     # from step 3
 npx convex env set RESEND_WEBHOOK_SECRET 'whsec_…'           # from step 4
-npx convex env set ONEHUB_EMAIL_FROM '"ONE Property Holdings | Internal Communications" <notifications@hub.oneholdings.co.za>'
-npx convex env set ONEHUB_EMAIL_REPLY_TO 'directors@oneholdings.co.za'   # optional: a monitored mailbox for replies
+npx convex env set ONEHUB_EMAIL_FROM '"ONE Property Holdings | Internal Communications" <notifications@mailoneholdings.co.za>'
+npx convex env set ONEHUB_EMAIL_REPLY_TO 'directors@your-company-mailbox'   # a mailbox someone reads; mailoneholdings.co.za has no inbox
 npx convex env set ONEHUB_EMAIL_MODE test                    # log | test | live
-npx convex env set ONEHUB_EMAIL_TEST_RECIPIENT 'approved-person@oneholdings.co.za'
+npx convex env set ONEHUB_EMAIL_TEST_RECIPIENT 'approved-test-address'
 # Sending caps. The defaults match the Resend free plan. Change only after an approved plan change.
 # npx convex env set ONEHUB_EMAIL_DAILY_LIMIT 100
 # npx convex env set ONEHUB_EMAIL_MONTHLY_LIMIT 3000
@@ -109,7 +112,7 @@ Do these in order, with `ONEHUB_EMAIL_MODE=test`. Test mode redirects **every** 
 | 1 | API key | Admin → Integrations → **Test Resend connection** (sends nothing) | "Key valid (sending-only)" |
 | 2 | Template rendering | Directors → Employees → Send employee update → **Preview** | Branded email with logo, badge, button |
 | 3 | Single test email | **Send test to me** | Arrives in the approved inbox; Email log shows Sent, then **Delivered** |
-| 4 | Authentication | In Gmail: ⋮ → *Show original* | `SPF: PASS`, `DKIM: PASS` (domain `hub.oneholdings.co.za`), DMARC `PASS` (or none if the domain has no DMARC record) |
+| 4 | Authentication | In Gmail: ⋮ → *Show original* | `SPF: PASS`, `DKIM: PASS` (domain `mailoneholdings.co.za`), `DMARC: PASS` |
 | 5 | Recipient selection | Choose *Selected employees* → one person → send | One email, redirected to the test inbox, subject `[TEST → their address] …` |
 | 6 | Duplicate protection | Send the same update to the same people again | Blocked: "already sent … in the last 24 hours" |
 | 7 | Bounce/webhook handling | Temporarily set `ONEHUB_EMAIL_TEST_RECIPIENT=bounced@resend.dev`, send a test, then set it back | Status **Bounced** with the reason in the Email log |
