@@ -13,4 +13,6 @@ crons.interval("send meeting reminders", { minutes: 5 }, internal.meetings.sendD
 crons.interval("recover email queue", { minutes: 10 }, internal.emails.recoverStuck, {});
 crons.interval("recover publishing jobs", { minutes: 15 }, internal.socialPosts.recoverStuck, {});
 
+crons.daily("refresh social tokens", { hourUTC: 1, minuteUTC: 17 }, internal.socialAuth.refreshTokens, {});
+
 export default crons;

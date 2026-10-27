@@ -31,15 +31,17 @@ _Last updated: 27 Oct 2026._
 - Publishing engine with idempotent jobs, retries, failure alerts, and a **live-publishing kill switch (off by default)**.
 - Campaigns (tasks/progress, linked posts), marketing library (upload, categories, tags, folders, versions, share-with-directors), ideas Kanban (drag & drop, convert to campaign/post).
 
+**Phase 5 (partial): Social media**: official OAuth connect for Facebook Pages + Instagram (one Meta login) and LinkedIn Pages; publishers for Facebook (text/photos/video), Instagram (image/Reel/carousel) and LinkedIn (text/images); per-platform validation before scheduling; expired-token detection + alerts; daily LinkedIn token refresh. Tested against mocked APIs; not yet against the live platforms.
+
 **Phase 6 (partial): PWA**: manifest, icons, service worker (app shell only), update prompt, push/notification-click handlers, iOS install guidance.
 
-**Quality**: `npm run typecheck`, `npm test` (12 backend tests) and `npm run build` all pass. UI reviewed at desktop and mobile widths using the dev-only harness (fictional sample data).
+**Quality**: `npm run typecheck`, `npm test` (21 backend tests) and `npm run build` all pass. UI reviewed at desktop and mobile widths using the dev-only harness (fictional sample data).
 
 ## Remaining
 
 | Phase | Work |
 |---|---|
-| 5 | OAuth connect flows: Meta (FB/IG), LinkedIn, Google Calendar, Microsoft Graph; Instagram & LinkedIn publishers; calendar two-way sync with dedupe + token refresh; Web Push sending (VAPID) + subscription UI |
+| 5 | ~~Social OAuth (Meta FB/IG, LinkedIn) + Instagram & LinkedIn publishers~~ **built, awaiting your developer apps** (docs/INTEGRATIONS.md); Google Calendar & Microsoft Graph sync; Web Push sending (VAPID) + subscription UI; LinkedIn video; post insights |
 | 5 | Resend delivery webhooks (bounces/delivered) → `emailJobs` status |
 | 6 | Push permission flow, offline state messaging |
 | 7 | End-to-end tests against a real dev deployment (Playwright), accessibility audit, load test of imports |
@@ -52,5 +54,5 @@ _Last updated: 27 Oct 2026._
 2. **Resend**: approve creating a dedicated sending subdomain + API key, and choose the From address.
 3. **Cloudflare**: approve creating the `one-hub` Pages project and the `hub.` subdomain.
 4. **Brand assets**: official logo files and the exact orange (hex).
-5. **Developer apps**: Meta (App Review), LinkedIn (Community Management API), Google Cloud OAuth, Microsoft Entra. These require company verification and take days to weeks, so start early.
+5. **Social developer apps**: follow docs/INTEGRATIONS.md → "Connecting social media". Meta works in Development mode for your own team immediately; LinkedIn needs Community Management API approval. Google Cloud OAuth and Microsoft Entra are needed later for calendars.
 6. **Bootstrap admin email** for the first Super Admin.

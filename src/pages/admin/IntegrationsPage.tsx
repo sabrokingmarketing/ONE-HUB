@@ -37,6 +37,8 @@ export default function IntegrationsPage() {
             <Row icon={Mail} name="Resend (email)" status={h.resend.status} detail={<>Mode: <Badge tone={h.resend.mode === "live" ? "green" : "amber"}>{h.resend.mode}</Badge> · {h.resend.queued} queued · {h.resend.failed} failed · {h.resend.detail}</>} />
             <Row icon={CalendarDays} name="Google Calendar" status={h.google.status} detail={`${h.google.connections} personal connections · OAuth app not yet configured`} />
             <Row icon={CalendarDays} name="Microsoft Outlook Calendar" status={h.microsoft.status} detail={`${h.microsoft.connections} personal connections · OAuth app not yet configured`} />
+            <Row icon={Share2} name="Meta (Facebook & Instagram)" status={h.meta} detail="META_APP_ID / META_APP_SECRET · connect accounts under Marketing → Connected accounts" />
+            <Row icon={Share2} name="LinkedIn" status={h.linkedin} detail="LINKEDIN_CLIENT_ID / LINKEDIN_CLIENT_SECRET" />
             <Row icon={Cloud} name="Cloudflare (hosting)" status={h.cloudflare.status} detail={h.cloudflare.detail} />
             <Row icon={HardDrive} name="File storage" status="operational" detail={`${h.storage.files} files · ${formatBytes(h.storage.bytes)} (Convex storage)`} />
           </CardBody></Card>
@@ -53,7 +55,7 @@ export default function IntegrationsPage() {
                 <Switch checked={settings["social.requireApproval"] === "true"} onChange={(v) => toggle("social.requireApproval", v)} label="Require approval" />
               </div>
               {h.social.length === 0 ? (
-                <p className="flex items-center gap-2 text-sm text-stone-500"><Share2 className="size-4" /> No social accounts connected. Meta / LinkedIn OAuth apps require developer registration and app review (see docs/INTEGRATIONS.md).</p>
+                <p className="flex items-center gap-2 text-sm text-stone-500"><Share2 className="size-4" /> No social accounts connected yet — connect them under Marketing → Connected accounts.</p>
               ) : (
                 <ul className="divide-y divide-stone-100">{h.social.map((s) => <li key={s.name + s.platform} className="flex items-center justify-between py-3 text-sm"><span>{s.name} <span className="text-stone-400">· {s.platform}</span></span><StatusBadge status={s.status} /></li>)}</ul>
               )}

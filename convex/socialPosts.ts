@@ -8,7 +8,7 @@ import { can } from "./lib/permissionMatrix";
 import { audit } from "./lib/audit";
 import { enqueueEmail, notify, siteUrl, usersWithRoles } from "./lib/queue";
 import { renderEmail } from "./lib/email";
-import { publishToPlatform, PublishError } from "./lib/publishers";
+import { publishToPlatform, PublishError, validateForPlatform } from "./lib/publishers";
 
 const MAX_ATTEMPTS = 3;
 const input = v.object({
@@ -124,7 +124,9 @@ export const save = mutation({
       for (const accId of d.accountIds) {
         const acc = await ctx.db.get(accId);
         if (!acc || acc.status !== "connected") throw new ConvexError(`Account "${acc?.name ?? "unknown"}" is not connected. Reconnect it first.`);
-        if (acc.platform === "instagram" && d.mediaStorageIds.length === 0) throw new ConvexError("Instagram posts need at least one image or video.");
+        const metas = await Promise.all(d.mediaStorageIds.map((sid) => ctx.db.system.get(sid)));
+        const problem = validateForPlatform(acc.platform, metas.map((m) => ({ contentType: m?.contentType ?? "" })));
+        if (problem) throw new ConvexError(`${acc.name}: ${problem}`);
       }
       status = (await requireApproval(ctx)) && !can(user, "social.approve") ? "pending_approval" : "scheduled";
     }
@@ -240,7 +242,14 @@ export const jobContext = internalQuery({
     const post = await ctx.db.get(job.postId);
     const account = await ctx.db.get(job.accountId);
     if (!post || !account) return null;
-    const mediaUrls = (await Promise.all(post.mediaStorageIds.map((s) => ctx.storage.getUrl(s)))).filter((u): u is string => !!u);
+    const media = (
+      await Promise.all(
+        post.mediaStorageIds.map(async (sid) => {
+          const [url, meta] = await Promise.all([ctx.storage.getUrl(sid), ctx.db.system.get(sid)]);
+          return url ? { url, contentType: meta?.contentType ?? "application/octet-stream" } : null;
+        }),
+      )
+    ).filter((m): m is { url: string; contentType: string } => !!m);
     const enabled = (await ctx.db.query("integrationSettings").withIndex("by_key", (q) => q.eq("key", "social.publishingEnabled")).unique())?.value === "true";
     return {
       enabled,
@@ -248,10 +257,11 @@ export const jobContext = internalQuery({
       platform: account.platform,
       externalId: account.externalId,
       accessToken: account.accessToken,
+      accountId: account._id,
       accountStatus: account.status,
       accountName: account.name,
       message: [post.caption, post.hashtags.map((h) => `#${h}`).join(" ")].filter(Boolean).join("\n\n"),
-      mediaUrls,
+      media,
     };
   },
 });
@@ -318,10 +328,13 @@ export const runJobs = internalAction({
         continue;
       }
       try {
-        const externalPostId = await publishToPlatform({ platform: c.platform, externalId: c.externalId, accessToken: c.accessToken, message: c.message, mediaUrls: c.mediaUrls });
+        const externalPostId = await publishToPlatform({ platform: c.platform, externalId: c.externalId, accessToken: c.accessToken, message: c.message, media: c.media });
         await ctx.runMutation(internal.socialPosts.finishJob, { jobId, ok: true, externalPostId });
       } catch (e) {
         const retryable = e instanceof PublishError ? e.retryable : true;
+        if (e instanceof PublishError && e.tokenInvalid) {
+          await ctx.runMutation(internal.socialAuth.markAccountExpired, { id: c.accountId, error: e.message });
+        }
         await ctx.runMutation(internal.socialPosts.finishJob, { jobId, ok: false, error: (e as Error).message, retryable });
       }
     }
@@ -349,7 +362,7 @@ export const accounts = query({
   handler: async (ctx) => {
     await requirePermission(ctx, "social.read");
     const rows = await ctx.db.query("marketingAccounts").collect();
-    return rows.map(({ accessToken: _t, ...a }) => a);
+    return rows.map(({ accessToken: _t, refreshToken: _r, ...a }) => a);
   },
 });
 
@@ -359,7 +372,7 @@ export const disconnectAccount = mutation({
     const user = await requirePermission(ctx, "social.connect");
     const a = await ctx.db.get(id);
     if (!a) throw notFound("Account");
-    await ctx.db.patch(id, { status: "disconnected", accessToken: undefined });
+    await ctx.db.patch(id, { status: "disconnected", accessToken: undefined, refreshToken: undefined });
     await audit(ctx, user._id, "disconnect", "marketingAccounts", id, `Disconnected ${a.platform} account ${a.name}`);
   },
 });

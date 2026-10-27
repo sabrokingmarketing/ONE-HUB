@@ -76,6 +76,8 @@ export const health = query({
       google: { status: env("AUTH_GOOGLE_CALENDAR_ID") ? ("configured_unverified" as const) : ("not_configured" as const), connections: calendars.filter((c) => c.provider === "google").length },
       microsoft: { status: env("AUTH_MICROSOFT_CALENDAR_ID") ? ("configured_unverified" as const) : ("not_configured" as const), connections: calendars.filter((c) => c.provider === "microsoft").length },
       social: accounts.map((a) => ({ name: a.name, platform: a.platform, status: a.status, lastError: a.lastError })),
+      meta: env("META_APP_ID") && env("META_APP_SECRET") ? ("configured_unverified" as const) : ("not_configured" as const),
+      linkedin: env("LINKEDIN_CLIENT_ID") && env("LINKEDIN_CLIENT_SECRET") ? ("configured_unverified" as const) : ("not_configured" as const),
       cloudflare: { status: "external" as const, detail: "Frontend hosting is monitored in the Cloudflare dashboard." },
       storage: { files: storage.length, bytes: storage.reduce((s, f) => s + f.size, 0) },
       failedPublishingJobs: failedPubs.length,

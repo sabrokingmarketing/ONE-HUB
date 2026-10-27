@@ -318,10 +318,24 @@ export default defineSchema({
       v.literal("disconnected"),
     ),
     accessToken: v.optional(v.string()),
+    refreshToken: v.optional(v.string()),
     tokenExpiresAt: v.optional(v.number()),
     connectedBy: v.id("users"),
     lastError: v.optional(v.string()),
-  }).index("by_platform", ["platform"]),
+    // Page/organisation that owns an Instagram account (for display), and when the token was last refreshed.
+    parentName: v.optional(v.string()),
+    connectedAt: v.optional(v.number()),
+  })
+    .index("by_platform", ["platform"])
+    .index("by_platform_external", ["platform", "externalId"]),
+
+  // Short-lived CSRF state for OAuth connect flows (single use, 10-minute expiry).
+  oauthStates: defineTable({
+    state: v.string(),
+    provider: v.union(v.literal("meta"), v.literal("linkedin")),
+    userId: v.id("users"),
+    expiresAt: v.number(),
+  }).index("by_state", ["state"]),
 
   marketingCampaigns: defineTable({
     name: v.string(),
