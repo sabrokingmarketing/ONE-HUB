@@ -7,3 +7,9 @@ compatibility_date = "2026-10-01"
 directory = "./dist"
 # Unknown paths (client-side routes such as /directors/studio or /f/<form>) serve index.html.
 not_found_handling = "single-page-application"
+
+# Build only if the Workers Builds build step didn't already produce dist, so a dashboard
+# build command such as `npx convex deploy --cmd 'npm run build'` (which injects VITE_CONVEX_URL)
+# is never overwritten by a second build.
+[build]
+command = "test -f dist/index.html || npm run build"
