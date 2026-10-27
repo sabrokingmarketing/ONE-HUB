@@ -41,7 +41,8 @@ Create a **new** Pages project (e.g. `one-hub`) connected to this repo:
 | Setting | Value |
 |---|---|
 | Build command | `npx convex deploy --cmd 'npm run build'` (needs `CONVEX_DEPLOY_KEY` from the Convex prod deployment) or `npm run build` with `VITE_CONVEX_URL` set |
-| Output directory | `dist` |
+| Output directory | `dist` (also declared in `wrangler.toml` as `pages_build_output_dir`) |
+| Node version | 22 (pinned in `.node-version`) |
 | Env vars | `CONVEX_DEPLOY_KEY` (secret) **or** `VITE_CONVEX_URL` |
 
 `public/_redirects` provides SPA routing; `public/_headers` sets HSTS, CSP, frame and referrer policies
