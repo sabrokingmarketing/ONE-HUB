@@ -60,14 +60,21 @@ export const health = query({
       ctx.db.query("calendarConnections").collect(),
       ctx.db.system.query("_storage").collect(),
     ]);
-    const lastSent = emails.find((e) => e.status === "sent");
+    // Accepted by Resend is not proof of delivery; only a webhook-confirmed delivery verifies the integration.
+    const lastDelivered = emails.find((e) => e.status === "delivered");
+    const lastAccepted = emails.find((e) => e.sentAt && e.status !== "logged");
     const env = (k: string) => !!process.env[k];
     return {
       convex: { status: "operational" as const, detail: "You are reading this from the live database." },
       resend: {
-        status: !env("RESEND_API_KEY") ? ("not_configured" as const) : lastSent ? ("verified" as const) : ("configured_unverified" as const),
+        status: !env("RESEND_API_KEY") ? ("not_configured" as const) : lastDelivered ? ("verified" as const) : ("configured_unverified" as const),
         mode: emailMode(),
-        detail: lastSent ? `Last successful send ${new Date(lastSent.sentAt!).toISOString()}` : "No email delivered yet.",
+        webhook: env("RESEND_WEBHOOK_SECRET"),
+        detail: lastDelivered
+          ? `Last confirmed delivery ${new Date(lastDelivered.deliveredAt ?? lastDelivered.sentAt!).toISOString()}`
+          : lastAccepted
+            ? `Last accepted by Resend ${new Date(lastAccepted.sentAt!).toISOString()} · no delivery confirmation yet${env("RESEND_WEBHOOK_SECRET") ? "" : " (webhook not configured)"}`
+            : "No email sent yet.",
         failed: emails.filter((e) => e.status === "failed").length,
         queued: emails.filter((e) => e.status === "queued").length,
       },

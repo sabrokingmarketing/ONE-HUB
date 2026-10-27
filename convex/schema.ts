@@ -345,6 +345,10 @@ export default defineSchema({
     audience: v.union(v.literal("all"), v.literal("department"), v.literal("selected")),
     department: v.optional(v.string()),
     recipientCount: v.number(),
+    linkUrl: v.optional(v.string()),
+    linkLabel: v.optional(v.string()),
+    // Rendered email, stored once and shared by every recipient's job.
+    html: v.optional(v.string()),
     // Hash of subject+body+recipients — blocks accidental double sends.
     dedupeKey: v.string(),
     status: v.union(v.literal("queued"), v.literal("sending"), v.literal("sent"), v.literal("partial")),
@@ -358,25 +362,43 @@ export default defineSchema({
     kind: v.string(),
     to: v.string(),
     subject: v.string(),
-    html: v.string(),
+    // Announcement jobs leave this empty and use the announcement's html (stored once).
+    html: v.optional(v.string()),
     announcementId: v.optional(v.id("announcements")),
     dedupeKey: v.string(),
     status: v.union(
       v.literal("queued"),
       v.literal("sending"),
+      // Accepted by Resend. Not the same as delivered to the inbox.
       v.literal("sent"),
       v.literal("logged"),
       v.literal("failed"),
+      // The states below only arrive through Resend delivery webhooks.
+      v.literal("delivery_delayed"),
+      v.literal("delivered"),
+      v.literal("bounced"),
+      v.literal("complained"),
     ),
     attempts: v.number(),
     providerId: v.optional(v.string()),
     error: v.optional(v.string()),
     nextAttemptAt: v.number(),
     sentAt: v.optional(v.number()),
+    // Set when the job is waiting for the provider's daily/monthly cap to reset.
+    deferredReason: v.optional(v.string()),
+    deliveredAt: v.optional(v.number()),
+    lastEventAt: v.optional(v.number()),
   })
     .index("by_status_next", ["status", "nextAttemptAt"])
     .index("by_dedupeKey", ["dedupeKey"])
-    .index("by_announcement", ["announcementId"]),
+    .index("by_announcement", ["announcementId", "status"])
+    .index("by_providerId", ["providerId"]),
+
+  // Emails accepted by Resend per UTC day, used to stay inside the plan's caps.
+  emailUsage: defineTable({
+    day: v.string(), // YYYY-MM-DD (UTC)
+    sent: v.number(),
+  }).index("by_day", ["day"]),
 
   notifications: defineTable({
     userId: v.id("users"),
