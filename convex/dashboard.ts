@@ -42,6 +42,7 @@ export const admin = query({
         users: active.length,
         admins: active.filter((u) => u.role === "super_admin").length,
         directors: active.filter((u) => u.role === "director").length,
+        marketing: active.filter((u) => u.role === "marketing").length,
         brokers: brokers.length,
         employees: employees.length,
         newLeads: leads.filter((l) => l.status === "new" && !l.archivedAt).length,

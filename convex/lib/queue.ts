@@ -50,7 +50,7 @@ export async function notify(
   }
 }
 
-export async function usersWithRoles(ctx: MutationCtx, roles: ("super_admin" | "director")[]) {
+export async function usersWithRoles(ctx: MutationCtx, roles: ("super_admin" | "director" | "marketing")[]) {
   const out: Id<"users">[] = [];
   for (const role of roles) {
     const users = await ctx.db

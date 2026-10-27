@@ -41,7 +41,7 @@ export default function AdminDashboard() {
           )}
 
           <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
-            <StatCard tone="brand" label="Active users" value={d.totals.users} hint={`${d.totals.admins} admins · ${d.totals.directors} directors`} icon={Users} to="/admin/users" />
+            <StatCard tone="brand" label="Active users" value={d.totals.users} hint={`${d.totals.admins} admins · ${d.totals.directors} directors · ${d.totals.marketing} marketing`} icon={Users} to="/admin/users" />
             <StatCard tone="dark" label="New leads" value={d.totals.newLeads} hint={`${d.totals.leads30d} in the last 30 days`} icon={Inbox} to="/leads" />
             <StatCard tone="dark" label="Brokers" value={d.totals.brokers} hint="Shared directory" icon={Contact} to="/directors/brokers" />
             <StatCard tone="dark" label="Employees" value={d.totals.employees} hint="Shared directory" icon={Users} to="/directors/employees" />

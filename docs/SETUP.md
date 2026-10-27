@@ -65,7 +65,8 @@ only after approving real sends.
 
 ## 5. Onboarding users
 
-Admin → **Users & roles** → *Invite user*. The invitee receives a 7-day, single-use link bound to
+Admin → **Users & roles** → *Invite user*. Choose **Director**, **Super Admin** or **Marketing team**
+(Marketing Studio access only, so the marketing team can upload material for directors). The invitee receives a 7-day, single-use link bound to
 their email address and sets their own password (min. 10 characters, letters and numbers).
 Suspending a user revokes all their sessions immediately.
 

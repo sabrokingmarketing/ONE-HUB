@@ -60,7 +60,9 @@ export const colleagues = query({
     await requireUser(ctx);
     const users = await ctx.db.query("users").collect();
     return users
-      .filter((u) => u.role && u.status !== "suspended")
+      // Marketing-team accounts only use the Marketing Studio, so they are not offered for
+      // broker/lead assignment, meetings or form notifications.
+      .filter((u) => u.role && u.role !== "marketing" && u.status !== "suspended")
       .map((u) => ({ _id: u._id, name: u.name ?? u.email ?? "User", email: u.email ?? "", role: u.role! }))
       .sort((a, b) => a.name.localeCompare(b.name));
   },

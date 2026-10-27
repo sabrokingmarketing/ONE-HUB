@@ -6,7 +6,7 @@
  * To customise later, add/remove permissions here (or layer per-user overrides
  * on top in `resolvePermissions`) — no other code needs to change.
  */
-export type Role = "super_admin" | "director";
+export type Role = "super_admin" | "director" | "marketing";
 
 export const PERMISSIONS = [
   "users.manage",
@@ -26,6 +26,8 @@ export const PERMISSIONS = [
   "calendar.personal",
   "documents.read",
   "documents.write",
+  "studio.read",
+  "studio.write",
   "settings.manage",
   "audit.read",
   "dashboard.admin",
@@ -54,8 +56,11 @@ export const ROLE_PERMISSIONS: Record<Role, ReadonlySet<Permission>> = {
     "calendar.personal",
     "documents.read",
     "documents.write",
+    "studio.read",
     "dashboard.director",
   ]),
+  // Marketing team: Marketing Studio only — no access to people, leads or admin data.
+  marketing: new Set<Permission>(["studio.read", "studio.write"]),
 };
 
 export interface PermissionSubject {
@@ -74,4 +79,5 @@ export function can(user: PermissionSubject | null | undefined, p: Permission) {
 export const ROLE_LABELS: Record<Role, string> = {
   super_admin: "Super Admin",
   director: "Director",
+  marketing: "Marketing team",
 };

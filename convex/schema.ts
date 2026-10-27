@@ -11,7 +11,8 @@ import { v } from "convex/values";
  * people editing the same record can never silently overwrite each other.
  */
 
-export const roleValidator = v.union(v.literal("super_admin"), v.literal("director"));
+// "marketing" = Marketing team: may only use the Marketing Studio (upload & manage marketing material).
+export const roleValidator = v.union(v.literal("super_admin"), v.literal("director"), v.literal("marketing"));
 
 const meta = {
   createdBy: v.id("users"),
@@ -281,6 +282,36 @@ export default defineSchema({
     windowStart: v.number(),
     count: v.number(),
   }).index("by_key", ["key"]),
+
+  // Marketing Studio: booklets, brochures, designs, presentations, videos, brand assets…
+  // uploaded by the marketing team for directors to browse, preview and download.
+  studioAssets: defineTable({
+    name: v.string(),
+    description: v.optional(v.string()),
+    category: v.string(),
+    collection: v.optional(v.string()),
+    tags: v.array(v.string()),
+    propertyId: v.optional(v.id("properties")),
+    storageId: v.id("_storage"),
+    contentType: v.string(),
+    size: v.number(),
+    // Optional cover image (e.g. for PDFs and videos) shown as the card preview.
+    coverStorageId: v.optional(v.id("_storage")),
+    featured: v.boolean(),
+    downloads: v.number(),
+    previousVersionId: v.optional(v.id("studioAssets")),
+    versionNumber: v.number(),
+    searchText: v.string(),
+    createdBy: v.id("users"),
+    updatedBy: v.id("users"),
+    updatedAt: v.number(),
+    version: v.number(),
+    archivedAt: v.optional(v.number()),
+  })
+    .index("by_archived", ["archivedAt"])
+    .index("by_category", ["category"])
+    .index("by_featured", ["featured", "archivedAt"])
+    .searchIndex("search", { searchField: "searchText", filterFields: ["archivedAt", "category"] }),
 
   documents: defineTable({
     name: v.string(),

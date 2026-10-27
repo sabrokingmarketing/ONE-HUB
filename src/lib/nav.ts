@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, Users, UserCog, Contact, CalendarDays, Inbox, FileText, Building2,
-  Mail, Bell, ShieldCheck, Activity, Plug, Settings, Send, ClipboardList, Gauge,
+  Mail, Bell, ShieldCheck, Activity, Plug, Settings, Send, ClipboardList, Gauge, Palette,
   type LucideIcon,
 } from "lucide-react";
 import type { Permission } from "../../convex/lib/permissionMatrix";
@@ -31,6 +31,9 @@ export const NAV: Record<Portal, NavSection[]> = {
       { label: "Documents", to: "/directors/documents", icon: FileText, perm: ["documents.read"] },
       { label: "Properties", to: "/properties", icon: Building2, perm: ["properties.read"] },
     ] },
+    { title: "Marketing", items: [
+      { label: "Marketing Studio", to: "/directors/studio", icon: Palette, perm: ["studio.read"] },
+    ] },
     { title: "Communication", items: [
       { label: "Employee announcements", to: "/directors/employees/announcements", icon: Send },
       { label: "Email log", to: "/admin/email", icon: Mail },
@@ -43,7 +46,7 @@ export const NAV: Record<Portal, NavSection[]> = {
     ] },
   ],
   directors: [
-    { items: [{ label: "Dashboard", to: "/directors", icon: LayoutDashboard, end: true }] },
+    { items: [{ label: "Dashboard", to: "/directors", icon: LayoutDashboard, perm: ["dashboard.director"], end: true }] },
     { title: "People", items: [
       { label: "Brokers", to: "/directors/brokers", icon: Contact, perm: ["brokers.read"] },
       { label: "Employees", to: "/directors/employees", icon: Users, perm: ["employees.read"], end: true },
@@ -52,12 +55,22 @@ export const NAV: Record<Portal, NavSection[]> = {
     { title: "Business", items: [
       { label: "Leads", to: "/leads", icon: Inbox, perm: ["leads.read"] },
       { label: "Lead forms", to: "/forms", icon: ClipboardList, perm: ["forms.read"] },
-      { label: "Calendar", to: "/calendar", icon: CalendarDays },
+      { label: "Calendar", to: "/calendar", icon: CalendarDays, perm: ["meetings.manage", "calendar.personal"] },
       { label: "Documents", to: "/directors/documents", icon: FileText, perm: ["documents.read"] },
       { label: "Properties", to: "/properties", icon: Building2, perm: ["properties.read"] },
     ] },
+    { title: "Marketing", items: [
+      { label: "Marketing Studio", to: "/directors/studio", icon: Palette, perm: ["studio.read"] },
+    ] },
   ],
 };
+
+/** Where each role lands after signing in. */
+export function homeFor(role: string) {
+  if (role === "super_admin") return "/admin";
+  if (role === "marketing") return "/directors/studio";
+  return "/directors";
+}
 
 export function portalsFor(role: string): Portal[] {
   return role === "super_admin" ? ["admin", "directors"] : ["directors"];

@@ -35,7 +35,7 @@ switcher in the sidebar.
 
 `users` (extends Convex Auth) · `invitations` · `properties` · `brokers` · `employees` · `meetings` ·
 `meetingParticipants` · `meetingReminders` · `calendarConnections` · `leadForms` · `leads` ·
-`rateLimits` · `documents` · `announcements` · `emailJobs` · `notifications` ·
+`rateLimits` · `studioAssets` · `documents` · `announcements` · `emailJobs` · `notifications` ·
 `notificationPreferences` · `pushSubscriptions` · `auditLogs` · `integrationSettings`
 
 Personal data stays personal: `calendarConnections`, `notificationPreferences`, `pushSubscriptions`
@@ -47,14 +47,18 @@ functions and are never returned to clients.
 A single matrix (role → permission set) shared by the backend and the UI. The UI uses it only to
 hide what you can't use. **Every Convex function re-checks permissions on the server.**
 
-| Feature | Super Admin | Director |
-|---|---|---|
-| User management, settings, audit, integrations | Full | – |
-| Brokers / Employees / Properties | Full | Full |
-| Employee announcements | Full | Send |
-| Lead forms & leads | Full | Full (permanent erasure: Super Admin only) |
-| Meetings & calendar | Full | Manage company meetings; own private events |
-| Documents | Full | Full |
+| Feature | Super Admin | Director | Marketing team |
+|---|---|---|---|
+| User management, settings, audit, integrations | Full | – | – |
+| Brokers / Employees / Properties | Full | Full | – |
+| Employee announcements | Full | Send | – |
+| Lead forms & leads | Full | Full (permanent erasure: Super Admin only) | – |
+| Meetings & calendar | Full | Manage company meetings; own private events | – |
+| Documents | Full | Full | – |
+| Marketing Studio | Full | View & download | Upload & manage |
+
+The **Marketing team** role exists only so the marketing team can publish material to the Marketing
+Studio with their own logins. It lives inside the Directors portal and sees nothing else.
 
 ## 5. Background jobs (`convex/crons.ts`)
 
@@ -71,7 +75,7 @@ Everything runs inside Convex, so nobody's browser needs to stay open.
 ```
 /login  /accept-invite  /reset-password  /f/:slug (public lead form)
 /admin  /admin/users  /admin/audit  /admin/integrations  /admin/permissions  /admin/usage  /admin/settings  /admin/email
-/directors  /directors/brokers[/import|/:id]  /directors/employees[/import|/announcements|/:id]  /directors/documents
+/directors  /directors/brokers[/import|/:id]  /directors/employees[/import|/announcements|/:id]  /directors/documents  /directors/studio[?asset=]
 /leads[/:id]  /forms[/new|/:id]  /calendar  /properties[/:id]
 /notifications  /settings
 ```

@@ -2,8 +2,9 @@
 
 _Last updated: 27 Oct 2026._
 
-ONE HUB currently has **two portals: Admin and Directors**. The Marketing portal was removed on request;
-its code remains in git history (commit `c52b941`) if it's needed later.
+ONE HUB currently has **two portals: Admin and Directors**. The earlier Marketing portal (social posting,
+campaigns) was removed on request; its code remains in git history (commit `c52b941`). Marketing material
+is now shared through the **Marketing Studio** inside the Directors portal.
 
 ## Environment audit (Phase 1)
 
@@ -26,6 +27,7 @@ its code remains in git history (commit `c52b941`) if it's needed later.
 - Dashboard: quick actions, KPI tiles, new-leads table, meetings timeline, recent brokers, employee updates, announcements and documents.
 - Broker directory: CRUD, search, filters, archive/restore, duplicate detection, share without internal notes (copy, Maps, vCard, native share), CSV/XLSX import wizard, CSV export.
 - Employee directory: the same features plus profile photos, and **Send Employee Update** (templates, recipients, preview, test send, confirmation, dedupe, delivery tally).
+- **Marketing Studio**: the marketing team's library of booklets, brochures, designs, social media, presentations, videos, photography, brand files, templates and documents. It has category tiles, featured material, search/filters/sort, grid and list views, in-browser preview (images, video, PDF), one-click download with download counts, collections, cover images, versioning, archive, and optional notifications to directors. Uploaded by the new **Marketing team** role (studio-only access); directors view and download.
 - Leads, lead form builder (public forms with spam protection; share by link, email, WhatsApp, embed, QR), calendar & meetings with reminders, properties, shared documents (upload, versions, categories, tags).
 
 **Admin portal**
@@ -33,7 +35,7 @@ its code remains in git history (commit `c52b941`) if it's needed later.
 
 **PWA**: manifest, icons, service worker (app shell only), update prompt, push handlers.
 
-**Quality**: `npm run typecheck`, `npm test` (11 backend tests) and `npm run build` all pass. UI reviewed at desktop and mobile widths with the dev-only harness.
+**Quality**: `npm run typecheck`, `npm test` (16 backend tests) and `npm run build` all pass. UI reviewed at desktop and mobile widths with the dev-only harness.
 
 ## Remaining
 

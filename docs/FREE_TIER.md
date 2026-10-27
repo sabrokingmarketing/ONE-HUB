@@ -13,7 +13,8 @@ third-party summaries.
 
 ## Media storage
 
-Convex file storage (~1 GB free) is used now for shared documents. If the document library grows
+Convex file storage (~1 GB free) is used now for shared documents and the Marketing Studio. Studio
+videos and print-ready design files are large, so this is the first free-tier limit ONE HUB is likely to reach. If the document library grows
 past ~700 MB, move large videos to **Cloudflare R2** (10 GB free storage, zero egress). This is a
 paid-capable product, so **R2 will not be enabled without approval**.
 

@@ -42,7 +42,7 @@ export default function UsersPage() {
                   {data.users.map((u) => (
                     <tr key={u._id} className="hover:bg-zinc-50/50">
                       <td className="px-5 py-3"><div className="flex items-center gap-3"><Avatar name={u.name} size="sm" /><div><div className="font-medium text-zinc-900">{u.name}{u._id === me._id && <span className="ml-1.5 text-xs text-zinc-400">(you)</span>}</div><div className="text-xs text-zinc-500">{u.email}</div></div></div></td>
-                      <td className="px-5 py-3"><Badge tone={u.role === "super_admin" ? "dark" : "brand"}>{ROLE_LABELS[u.role]}</Badge></td>
+                      <td className="px-5 py-3"><Badge tone={u.role === "super_admin" ? "dark" : u.role === "marketing" ? "blue" : "brand"}>{ROLE_LABELS[u.role]}</Badge></td>
                       <td className="px-5 py-3"><StatusBadge status={u.status} /></td>
                       <td className="px-5 py-3 text-zinc-600">{u.lastLoginAt ? timeAgo(u.lastLoginAt) : "Never"}</td>
                       <td className="px-5 py-3 text-zinc-600">{formatDate(u.createdAt)}</td>
@@ -108,9 +108,9 @@ function InviteDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o:
       <form id="invite-form" onSubmit={submit} className="space-y-4">
         <Field label="Full name" required><Input required value={name} onChange={(e) => setName(e.target.value)} /></Field>
         <Field label="Work email" required><Input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} /></Field>
-        <Field label="Role" required hint={role === "super_admin" ? "Full control over every portal, user and setting." : "Brokers, employees, leads, forms, meetings, documents and properties."}>
+        <Field label="Role" required hint={role === "super_admin" ? "Full control over every portal, user and setting." : role === "marketing" ? "Marketing Studio only: upload and manage booklets, brochures, designs and other marketing material." : "Brokers, employees, leads, forms, meetings, documents, properties and the Marketing Studio (view & download)."}>
           <Select value={role} onChange={(e) => setRole(e.target.value as Role)}>
-            <option value="director">Director</option><option value="super_admin">Super Admin</option>
+            <option value="director">Director</option><option value="marketing">Marketing team</option><option value="super_admin">Super Admin</option>
           </Select>
         </Field>
       </form>
@@ -125,7 +125,7 @@ function AccessDialog({ user, onClose }: { user: { _id: Id<"users">; name: strin
     <Dialog open onOpenChange={(o) => !o && onClose()} title={`Access for ${user.name}`}
       footer={<><Button variant="ghost" onClick={onClose}>Cancel</Button><Button loading={pending} onClick={() => void save({ userId: user._id, role }).then((r) => r !== undefined && onClose())}>Save</Button></>}>
       <div className="space-y-5">
-        <Field label="Role"><Select value={role} onChange={(e) => setRole(e.target.value as Role)}><option value="director">Director</option><option value="super_admin">Super Admin</option></Select></Field>
+        <Field label="Role"><Select value={role} onChange={(e) => setRole(e.target.value as Role)}><option value="director">Director</option><option value="marketing">Marketing team</option><option value="super_admin">Super Admin</option></Select></Field>
       </div>
     </Dialog>
   );

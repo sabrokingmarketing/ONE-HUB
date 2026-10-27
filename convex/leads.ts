@@ -98,7 +98,7 @@ export const update = mutation({
     if (a.assignedTo !== undefined && (a.assignedTo ?? undefined) !== l.assignedTo) {
       if (a.assignedTo) {
         const assignee = await ctx.db.get(a.assignedTo);
-        if (!assignee?.role || assignee.status === "suspended") throw new ConvexError("Leads can only be assigned to active directors or admins.");
+        if (!assignee?.role || assignee.role === "marketing" || assignee.status === "suspended") throw new ConvexError("Leads can only be assigned to active directors or admins.");
         changes.push(`assigned to ${assignee.name}`);
         if (assignee._id !== user._id) {
           await notify(ctx, [assignee._id], { type: "lead", title: `${user.name ?? "Someone"} assigned you a lead: ${l.name}`, link: `/leads/${l._id}` });

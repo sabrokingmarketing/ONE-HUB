@@ -30,6 +30,7 @@ import type * as meetings from "../meetings.js";
 import type * as notifications from "../notifications.js";
 import type * as properties from "../properties.js";
 import type * as search from "../search.js";
+import type * as studio from "../studio.js";
 import type * as system from "../system.js";
 import type * as users from "../users.js";
 
@@ -55,6 +56,7 @@ declare const fullApi: ApiFromModules<{
   "notifications": typeof notifications;
   "properties": typeof properties;
   "search": typeof search;
+  "studio": typeof studio;
   "system": typeof system;
   "users": typeof users;
 }>;

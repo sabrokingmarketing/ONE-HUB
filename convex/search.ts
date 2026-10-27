@@ -37,6 +37,10 @@ export const global = query({
       const r = await ctx.db.query("documents").withSearchIndex("search", (s) => s.search("searchText", term).eq("archivedAt", undefined)).take(5);
       push("Documents", r.map((d) => ({ id: d._id, title: d.name, subtitle: d.category, href: `/directors/documents?doc=${d._id}` })));
     }
+    if (can(user, "studio.read")) {
+      const r = await ctx.db.query("studioAssets").withSearchIndex("search", (s) => s.search("searchText", term).eq("archivedAt", undefined)).take(5);
+      push("Marketing Studio", r.map((x) => ({ id: x._id, title: x.name, subtitle: x.category, href: `/directors/studio?asset=${x._id}` })));
+    }
     if (can(user, "meetings.manage") || can(user, "calendar.personal")) {
       const upcoming = await ctx.db.query("meetings").withIndex("by_startsAt", (s) => s.gte("startsAt", Date.now() - 30 * 86400_000)).take(300);
       const mine = new Set((await ctx.db.query("meetingParticipants").withIndex("by_user", (s) => s.eq("userId", user._id)).collect()).map((p) => p.meetingId));

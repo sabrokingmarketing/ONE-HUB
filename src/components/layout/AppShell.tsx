@@ -5,7 +5,7 @@ import { useAuthActions } from "@convex-dev/auth/react";
 import { Bell, LogOut, Menu as MenuIcon, Search, Settings, X, LifeBuoy } from "lucide-react";
 import { api } from "../../../convex/_generated/api";
 import { useMe, useCan } from "@/lib/session";
-import { NAV, PORTAL_HOME, PORTAL_LABEL, portalFromPath, portalsFor, type Portal } from "@/lib/nav";
+import { NAV, PORTAL_HOME, PORTAL_LABEL, homeFor, portalFromPath, portalsFor, type Portal } from "@/lib/nav";
 import { cn } from "@/lib/utils";
 import { Avatar } from "@/components/ui/misc";
 import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from "@/components/ui/menu";
@@ -58,7 +58,7 @@ function Sidebar({ portal, onNavigate }: { portal: Portal; onNavigate?: () => vo
   return (
     <div className="flex h-full flex-col">
       <div className="flex h-16 items-center px-4">
-        <Link to={PORTAL_HOME[portal]} onClick={onNavigate}><Logo dark /></Link>
+        <Link to={me.role === "marketing" ? homeFor(me.role) : PORTAL_HOME[portal]} onClick={onNavigate}><Logo /></Link>
       </div>
       <div className="mx-4 h-px bg-gradient-to-r from-transparent via-zinc-300/70 to-transparent" />
 

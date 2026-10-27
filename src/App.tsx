@@ -6,7 +6,7 @@ import { api } from "../convex/_generated/api";
 import { SessionContext, useMe } from "@/lib/session";
 import { AppShell } from "@/components/layout/AppShell";
 import { Logo } from "@/components/layout/Logo";
-import { PORTAL_HOME, portalsFor } from "@/lib/nav";
+import { homeFor } from "@/lib/nav";
 import type { Permission } from "../convex/lib/permissionMatrix";
 import { EmptyState } from "@/components/ui/misc";
 import { ShieldOff } from "lucide-react";
@@ -34,6 +34,7 @@ const EmployeeProfile = lazy(() => import("./pages/directors/EmployeeProfile"));
 const AnnouncementsPage = lazy(() => import("./pages/directors/AnnouncementsPage"));
 const DocumentsPage = lazy(() => import("./pages/directors/DocumentsPage"));
 const ImportPage = lazy(() => import("./pages/directors/ImportPage"));
+const StudioPage = lazy(() => import("./pages/directors/StudioPage"));
 
 const LeadsPage = lazy(() => import("./pages/leads/LeadsPage"));
 const LeadDetail = lazy(() => import("./pages/leads/LeadDetail"));
@@ -68,7 +69,7 @@ function Guard({ perm, children }: { perm?: Permission[]; children: React.ReactN
 
 function Home() {
   const me = useMe();
-  return <Navigate to={PORTAL_HOME[portalsFor(me.role!)[0]]} replace />;
+  return <Navigate to={homeFor(me.role!)} replace />;
 }
 
 function Authenticated() {
@@ -114,6 +115,7 @@ function Authenticated() {
           <Route path="directors/employees/announcements" element={<Guard perm={["announcements.send"]}><AnnouncementsPage /></Guard>} />
           <Route path="directors/employees/:id" element={<Guard perm={["employees.read"]}><EmployeeProfile /></Guard>} />
           <Route path="directors/documents" element={<Guard perm={["documents.read"]}><DocumentsPage /></Guard>} />
+          <Route path="directors/studio" element={<Guard perm={["studio.read"]}><StudioPage /></Guard>} />
           {/* Shared business */}
           <Route path="leads" element={<Guard perm={["leads.read"]}><LeadsPage /></Guard>} />
           <Route path="leads/:id" element={<Guard perm={["leads.read"]}><LeadDetail /></Guard>} />
