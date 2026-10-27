@@ -148,6 +148,23 @@ describe("transport", () => {
     await expect(deliverEmail("a@one.test", "s", "<p/>")).rejects.toMatchObject({ quota: "daily", retryable: true });
   });
 
+  test("credential emails are never redirected in test mode or swallowed in log mode", async () => {
+    process.env.ONEHUB_EMAIL_MODE = "test";
+    process.env.RESEND_API_KEY = "re_test";
+    process.env.ONEHUB_EMAIL_FROM = "ONE <n@hub.one.test>";
+    process.env.ONEHUB_EMAIL_TEST_RECIPIENT = "qa@one.test";
+    const fetchMock = vi.fn(async () => new Response(JSON.stringify({ id: "em_2" }), { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+    await deliverEmail("a@one.test", "Reset", "<p/>", undefined, { credential: true });
+    await deliverEmail("b@one.test", "News", "<p/>");
+    const to = (i: number) => JSON.parse((fetchMock.mock.calls[i] as unknown as [string, RequestInit])[1].body as string).to;
+    expect(to(0)).toEqual(["a@one.test"]);
+    expect(to(1)).toEqual(["qa@one.test"]);
+
+    delete process.env.ONEHUB_EMAIL_MODE;
+    await expect(deliverEmail("a@one.test", "Reset", "<p/>", undefined, { credential: true })).rejects.toMatchObject({ retryable: false });
+  });
+
   test("log mode never calls the provider", async () => {
     delete process.env.ONEHUB_EMAIL_MODE;
     const fetchMock = vi.fn();

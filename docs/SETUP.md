@@ -16,12 +16,13 @@ Choose **"create a new project"**, name it `one-hub`. This writes `CONVEX_DEPLOY
 ```bash
 npx @convex-dev/auth                                   # generates JWT_PRIVATE_KEY + JWKS on the deployment
 npx convex env set SITE_URL http://localhost:5173
-npx convex env set ONEHUB_BOOTSTRAP_ADMIN_EMAIL you@company.co.za
 # Email stays in safe "log" mode until you change it (see §4)
+npx convex run system:bootstrapAdmin '{"email":"you@company.co.za","name":"Your Name"}'
 ```
 
-Run `npm run dev`, open `/accept-invite?bootstrap=1`, register with the bootstrap email. That account
-becomes the only Super Admin; the bootstrap path closes as soon as a Super Admin exists.
+The last command prints a one-time activation link (valid 24 hours) for the first Super Admin. Open it,
+set a password, and invite everyone else from Admin → Users & roles. There is no open signup: the command
+is internal-only (it needs the deployment's credentials) and refuses once an active Super Admin exists.
 
 ## 2. Convex (production)
 
@@ -30,9 +31,12 @@ Production is a separate deployment in the same new project:
 ```bash
 npx convex deploy                     # prompts before pushing to prod
 npx convex env set --prod SITE_URL https://hub.<your-domain>
-npx convex env set --prod ONEHUB_BOOTSTRAP_ADMIN_EMAIL ...
 npx @convex-dev/auth --prod
+npx convex run --prod system:bootstrapAdmin '{"email":"you@company.co.za","name":"Your Name"}'
 ```
+
+`SITE_URL` must be set on every deployment before the bootstrap command or any email: the backend refuses
+to build links without it rather than fall back to a wrong host.
 
 ## 3. Cloudflare Workers (frontend)
 

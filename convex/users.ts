@@ -57,7 +57,10 @@ export const updateProfile = mutation({
 export const colleagues = query({
   args: {},
   handler: async (ctx) => {
-    await requireUser(ctx);
+    const me = await requireUser(ctx);
+    // Only roles that assign or invite people need the directory (Marketing-team accounts don't).
+    const perms = resolvePermissions(me);
+    if (!(["leads.read", "brokers.write", "meetings.manage", "forms.write"] as const).some((p) => perms.has(p))) return [];
     const users = await ctx.db.query("users").collect();
     return users
       // Marketing-team accounts only use the Marketing Studio, so they are not offered for

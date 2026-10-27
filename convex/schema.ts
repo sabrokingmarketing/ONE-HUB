@@ -88,7 +88,7 @@ export default defineSchema({
       v.literal("revoked"),
       v.literal("expired"),
     ),
-    invitedBy: v.id("users"),
+    invitedBy: v.optional(v.id("users")), // unset for the bootstrap Super Admin invite
     expiresAt: v.number(),
     acceptedAt: v.optional(v.number()),
     lastSentAt: v.optional(v.number()),
@@ -388,8 +388,11 @@ export default defineSchema({
     deferredReason: v.optional(v.string()),
     deliveredAt: v.optional(v.number()),
     lastEventAt: v.optional(v.number()),
+    // Set once the body has been dropped by the retention cron (POPIA data minimisation).
+    bodyPurgedAt: v.optional(v.number()),
   })
     .index("by_status_next", ["status", "nextAttemptAt"])
+    .index("by_purge", ["bodyPurgedAt", "nextAttemptAt"])
     .index("by_dedupeKey", ["dedupeKey"])
     .index("by_announcement", ["announcementId", "status"])
     .index("by_providerId", ["providerId"]),
@@ -417,7 +420,8 @@ export default defineSchema({
     readAt: v.optional(v.number()),
   })
     .index("by_user", ["userId"])
-    .index("by_user_read", ["userId", "readAt"]),
+    .index("by_user_read", ["userId", "readAt"])
+    .index("by_link", ["link"]),
 
   notificationPreferences: defineTable({
     userId: v.id("users"),

@@ -19,11 +19,11 @@ npm install
 npx convex dev            # creates/links a NEW, dedicated Convex project and writes .env.local
 npx @convex-dev/auth      # one-time: generates JWT keys for Convex Auth
 npx convex env set SITE_URL http://localhost:5173
-npx convex env set ONEHUB_BOOTSTRAP_ADMIN_EMAIL you@company.co.za
+npx convex run system:bootstrapAdmin '{"email":"you@company.co.za","name":"Your Name"}'
 npm run dev               # Vite + Convex together
 ```
 
-Then open `http://localhost:5173/accept-invite?bootstrap=1` and create the first Super Admin with the bootstrap email. Everyone else joins by invitation (Admin → Users & roles). Full instructions: [`docs/SETUP.md`](docs/SETUP.md).
+Then open the activation link the bootstrap command printed and create the first Super Admin. Everyone else joins by invitation (Admin → Users & roles). Full instructions: [`docs/SETUP.md`](docs/SETUP.md).
 
 ## Scripts
 

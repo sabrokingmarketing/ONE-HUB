@@ -1,5 +1,5 @@
 import { v, ConvexError } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { mutation, query, type MutationCtx } from "./_generated/server";
 import type { Doc } from "./_generated/dataModel";
 import { formField } from "./schema";
 import { requirePermission, conflictError, notFound } from "./lib/auth";
@@ -144,6 +144,24 @@ export const publicGet = query({
 
 const RATE_WINDOW = 60_000;
 const RATE_MAX = 20;
+// Lead-alert emails per form per hour. Beyond this (e.g. a spam flood) leads are still saved and
+// shown in-app, but no more emails go out, so the Resend daily quota stays free for invites/resets.
+const ALERT_WINDOW = 60 * 60_000;
+const ALERT_MAX = 15;
+
+/** Fixed-window counter. Returns false when the window's limit is already reached. */
+async function hit(ctx: MutationCtx, key: string, window: number, max: number, now: number) {
+  const bucket = await ctx.db.query("rateLimits").withIndex("by_key", (q) => q.eq("key", key)).unique();
+  if (bucket && now - bucket.windowStart < window) {
+    if (bucket.count >= max) return false;
+    await ctx.db.patch(bucket._id, { count: bucket.count + 1 });
+  } else if (bucket) {
+    await ctx.db.patch(bucket._id, { windowStart: now, count: 1 });
+  } else {
+    await ctx.db.insert("rateLimits", { key, windowStart: now, count: 1 });
+  }
+  return true;
+}
 
 export const submit = mutation({
   args: {
@@ -160,17 +178,15 @@ export const submit = mutation({
     if (a.honeypot || a.elapsedMs < 2500) {
       return { thankYouMessage: form.thankYouMessage, successUrl: form.successUrl };
     }
+    // Reject oversized payloads before doing any work: only the form's own fields are read.
+    if (Object.keys(a.answers).length > form.fields.length + 5) throw new ConvexError("This submission doesn't match the form.");
+    for (const raw of Object.values(a.answers)) {
+      if (Array.isArray(raw) && (raw.length > 50 || raw.some((x) => x.length > 500))) throw new ConvexError("This submission doesn't match the form.");
+    }
     // Per-form fixed-window rate limit.
-    const key = `form:${form._id}`;
-    const bucket = await ctx.db.query("rateLimits").withIndex("by_key", (q) => q.eq("key", key)).unique();
     const now = Date.now();
-    if (bucket && now - bucket.windowStart < RATE_WINDOW) {
-      if (bucket.count >= RATE_MAX) throw new ConvexError("Too many submissions right now. Please try again in a minute.");
-      await ctx.db.patch(bucket._id, { count: bucket.count + 1 });
-    } else if (bucket) {
-      await ctx.db.patch(bucket._id, { windowStart: now, count: 1 });
-    } else {
-      await ctx.db.insert("rateLimits", { key, windowStart: now, count: 1 });
+    if (!(await hit(ctx, `form:${form._id}`, RATE_WINDOW, RATE_MAX, now))) {
+      throw new ConvexError("Too many submissions right now. Please try again in a minute.");
     }
 
     const answers: { label: string; value: string }[] = [];
@@ -209,7 +225,8 @@ export const submit = mutation({
 
     const recipients = form.notifyUserIds.length ? form.notifyUserIds : await usersWithRoles(ctx, ["director", "super_admin"]);
     await notify(ctx, recipients, { type: "lead", title: `New lead: ${name}`, body: `Submitted via "${form.title}"`, link: `/leads/${leadId}` });
-    for (const uid of form.notifyUserIds) {
+    const emailAlerts = form.notifyUserIds.length > 0 && (await hit(ctx, `formmail:${form._id}`, ALERT_WINDOW, ALERT_MAX, now));
+    for (const uid of emailAlerts ? form.notifyUserIds : []) {
       const u = await ctx.db.get(uid);
       if (!u?.email || u.status === "suspended") continue;
       await enqueueEmail(ctx, {

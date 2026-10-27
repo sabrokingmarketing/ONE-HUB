@@ -45,7 +45,7 @@ export const claimBatch = internalMutation({
         if (!shared.has(j.announcementId)) shared.set(j.announcementId, (await ctx.db.get(j.announcementId))?.html ?? "");
         html = shared.get(j.announcementId);
       }
-      out.push({ _id: j._id, to: j.to, subject: j.subject, html: html ?? "", attempts: j.attempts + 1 });
+      out.push({ _id: j._id, kind: j.kind, to: j.to, subject: j.subject, html: html ?? "", attempts: j.attempts + 1 });
     }
     return out;
   },
@@ -111,7 +111,9 @@ export const processQueue = internalAction({
       try {
         // Same key for same-day retries (no double send after a timeout); a job deferred to the
         // next day by the sending limit gets a fresh key so a cached quota error can't replay.
-        const r = await deliverEmail(job.to, job.subject, job.html, `onehub-${job._id}-${utcDay(Date.now())}`);
+        const r = await deliverEmail(job.to, job.subject, job.html, `onehub-${job._id}-${utcDay(Date.now())}`, {
+          credential: job.kind === "invitation",
+        });
         await ctx.runMutation(internal.emails.markResult, { id: job._id, ok: true, logged: r.status === "logged", providerId: r.providerId });
       } catch (e) {
         const err = e as DeliveryError;
@@ -162,6 +164,26 @@ const EVENT_STATUS: Record<string, Doc<"emailJobs">["status"] | undefined> = {
 };
 
 /** Applies a verified Resend webhook event to the matching email job. */
+/** POPIA data minimisation: drop the body of finished emails after 30 days (status and metadata stay). */
+const BODY_RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
+export const purgeOldBodies = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const now = Date.now();
+    const jobs = await ctx.db
+      .query("emailJobs")
+      .withIndex("by_purge", (q) => q.eq("bodyPurgedAt", undefined).lt("nextAttemptAt", now - BODY_RETENTION_MS))
+      .take(1000);
+    let purged = 0;
+    for (const j of jobs) {
+      if (j.status === "queued" || j.status === "sending") continue; // still needs its body
+      await ctx.db.patch(j._id, { html: undefined, bodyPurgedAt: now });
+      purged++;
+    }
+    return purged;
+  },
+});
+
 export const applyWebhookEvent = internalMutation({
   args: { type: v.string(), emailId: v.string(), at: v.number(), detail: v.optional(v.string()) },
   handler: async (ctx, a) => {

@@ -1,9 +1,11 @@
 import { v, ConvexError } from "convex/values";
 import { paginationOptsValidator } from "convex/server";
-import { mutation, query } from "./_generated/server";
+import { internalMutation, mutation, query } from "./_generated/server";
 import { requirePermission } from "./lib/auth";
 import { audit } from "./lib/audit";
 import { emailMode } from "./lib/email";
+import { siteUrl } from "./lib/queue";
+import { isEmail, randomToken } from "./lib/text";
 
 const SETTING_KEYS = ["leads.retentionDays", "company.timezone"] as const;
 
@@ -83,5 +85,45 @@ export const health = query({
       cloudflare: { status: "external" as const, detail: "Frontend hosting is monitored in the Cloudflare dashboard." },
       storage: { files: storage.length, bytes: storage.reduce((s, f) => s + f.size, 0) },
     };
+  },
+});
+
+/**
+ * Creates the invitation for the first Super Admin. Internal only, so it can't be called from a
+ * browser; run it with the deployment's credentials:
+ *   npx convex run --prod system:bootstrapAdmin '{"email":"you@company.co.za","name":"Your Name"}'
+ * Refuses once an active Super Admin exists. Returns the activation link (valid 24 hours).
+ */
+export const bootstrapAdmin = internalMutation({
+  args: { email: v.string(), name: v.string() },
+  handler: async (ctx, a) => {
+    const email = a.email.trim().toLowerCase();
+    const name = a.name.trim();
+    if (!isEmail(email)) throw new ConvexError("Enter a valid email address.");
+    if (!name) throw new ConvexError("Name is required.");
+    const admins = await ctx.db.query("users").withIndex("by_role", (q) => q.eq("role", "super_admin")).collect();
+    if (admins.some((u) => u.status !== "suspended")) {
+      throw new ConvexError("A Super Admin already exists. Invite further users from Admin → Users & roles.");
+    }
+    const pending = await ctx.db.query("invitations").withIndex("by_email", (q) => q.eq("email", email)).collect();
+    for (const p of pending) if (p.status === "pending") await ctx.db.patch(p._id, { status: "revoked" });
+    const token = randomToken(32);
+    const id = await ctx.db.insert("invitations", {
+      email,
+      name,
+      role: "super_admin",
+      token,
+      status: "pending",
+      expiresAt: Date.now() + 24 * 60 * 60 * 1000,
+      lastSentAt: Date.now(),
+    });
+    await ctx.db.insert("auditLogs", {
+      action: "bootstrap",
+      entity: "invitations",
+      entityId: id,
+      summary: `Bootstrap Super Admin invitation created for ${email}`,
+      at: Date.now(),
+    });
+    return { url: siteUrl(`/accept-invite?token=${token}`), expiresInHours: 24 };
   },
 });

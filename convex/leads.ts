@@ -151,6 +151,17 @@ export const erase = mutation({
     if (!l) throw notFound("Lead");
     if (confirmName.trim() !== l.name) throw new ConvexError("Type the lead's exact name to confirm permanent deletion.");
     await ctx.db.delete(id);
+    // POPIA: the lead's personal information also lives in its alert emails, in-app notifications
+    // and audit summaries. Remove or redact all of them so nothing identifying is left behind.
+    const jobs = await ctx.db
+      .query("emailJobs")
+      .withIndex("by_dedupeKey", (q) => q.gte("dedupeKey", `lead:${id}:`).lt("dedupeKey", `lead:${id};`))
+      .collect();
+    for (const j of jobs) await ctx.db.patch(j._id, { html: undefined, subject: "[erased lead]" });
+    const notes = await ctx.db.query("notifications").withIndex("by_link", (q) => q.eq("link", `/leads/${id}`)).collect();
+    for (const n of notes) await ctx.db.delete(n._id);
+    const logs = await ctx.db.query("auditLogs").withIndex("by_entity", (q) => q.eq("entity", "leads").eq("entityId", id)).collect();
+    for (const log of logs) await ctx.db.patch(log._id, { summary: "[erased lead]" });
     await audit(ctx, user._id, "erase", "leads", id, `Permanently erased a lead (POPIA deletion request)`);
   },
 });

@@ -21,7 +21,7 @@ is now shared through the **Marketing Studio** inside the Directors portal.
 - Vite + React 19 + TypeScript + Tailwind v4 app with a soft, modern design system.
 - Light floating sidebar with icon tiles, breadcrumb top bar, ⌘K global search, notification centre, mobile drawer.
 - Every dashboard row uses equal, fixed-size blocks, so no block is bigger than its neighbours.
-- Invite-only Convex Auth (bootstrap admin, password reset, suspension with session revocation); server-enforced Super Admin / Director permissions; audit logging.
+- Invite-only Convex Auth (first Super Admin via internal `system:bootstrapAdmin` command, password reset, suspension with session revocation); server-enforced Super Admin / Director permissions; audit logging.
 
 **Directors portal**
 - Dashboard: quick actions, KPI tiles, new-leads table, meetings timeline, recent brokers, employee updates, announcements and documents.

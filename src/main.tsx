@@ -29,5 +29,6 @@ if (!url) {
       </ErrorBoundary>
     </StrictMode>,
   );
-  registerServiceWorker();
+  // Public lead forms are often embedded on other sites; they don't need the app's service worker.
+  if (!window.location.pathname.startsWith("/f/")) registerServiceWorker();
 }

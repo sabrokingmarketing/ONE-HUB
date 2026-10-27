@@ -1,7 +1,7 @@
 import { convexTest } from "convex-test";
 import { describe, expect, test } from "vitest";
 import schema from "./schema";
-import { api } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 import { modules } from "./test.setup";
 
 type Role = "super_admin" | "director";
@@ -134,5 +134,70 @@ describe("email + announcements", () => {
     expect(jobs).toHaveLength(2);
     await expect(dirA.as.mutation(api.announcements.send, args)).rejects.toThrow(/already sent/);
     await expect(dirA.as.mutation(api.announcements.send, { ...args, subject: "Other", confirmedCount: 5 })).rejects.toThrow(/recipient list changed/);
+  });
+});
+
+describe("go-live security", () => {
+  const fields = [
+    { id: "f1", type: "first_name" as const, label: "First name", required: true },
+    { id: "f2", type: "email" as const, label: "Email", required: true },
+    { id: "f3", type: "consent" as const, label: "I agree", required: true },
+  ];
+  test("no open signup: the first Super Admin comes only from the internal bootstrap invite", async () => {
+    const t = convexTest(schema, modules);
+    const r = await t.mutation(internal.system.bootstrapAdmin, { email: "Boss@One.test", name: "Boss" });
+    expect(r.url).toMatch(/^https:\/\/hub\.test\/accept-invite\?token=[0-9a-f]{64}$/);
+    const token = r.url.split("token=")[1];
+    const invite = await t.query(api.users.getInvitation, { token });
+    expect(invite).toMatchObject({ email: "boss@one.test", role: "super_admin", valid: true });
+
+    // Once an active Super Admin exists the command refuses.
+    await t.run((ctx) => ctx.db.insert("users", { name: "Boss", email: "boss@one.test", role: "super_admin", status: "active" }));
+    await expect(t.mutation(internal.system.bootstrapAdmin, { email: "x@one.test", name: "X" })).rejects.toThrow(/already exists/);
+  });
+
+  test("erasing a lead removes its notifications, alert email body and audit details", async () => {
+    const { t, dirA, admin } = await setup();
+    const formId = await dirA.as.mutation(api.leadForms.create, {
+      data: { title: "Erase", fields, thankYouMessage: "Thanks", notifyUserIds: [dirA.id], status: "active" },
+    });
+    const form = await dirA.as.query(api.leadForms.get, { id: formId });
+    await t.mutation(api.leadForms.submit, { slug: form!.slug, answers: { f1: "Naledi", f2: "naledi@x.co.za", f3: true }, elapsedMs: 9000 });
+    const lead = (await dirA.as.query(api.leads.list, { paginationOpts: { numItems: 10, cursor: null } })).page[0];
+    await admin.as.mutation(api.leads.erase, { id: lead._id, confirmName: "Naledi" });
+
+    const leftovers = await t.run(async (ctx) => {
+      const jobs = await ctx.db.query("emailJobs").collect();
+      const notes = await ctx.db.query("notifications").collect();
+      const logs = await ctx.db.query("auditLogs").collect();
+      return JSON.stringify({ jobs, notes, logs });
+    });
+    expect(leftovers).not.toMatch(/Naledi|naledi@x\.co\.za/);
+  });
+
+  test("lead alert emails stop during a submission flood, but leads are still saved", async () => {
+    const { t, dirA } = await setup();
+    const formId = await dirA.as.mutation(api.leadForms.create, {
+      data: { title: "Flood", fields, thankYouMessage: "Thanks", notifyUserIds: [dirA.id], status: "active" },
+    });
+    const form = await dirA.as.query(api.leadForms.get, { id: formId });
+    for (let i = 0; i < 18; i++) {
+      await t.mutation(api.leadForms.submit, { slug: form!.slug, answers: { f1: `L${i}`, f2: `l${i}@x.co.za`, f3: true }, elapsedMs: 9000 });
+    }
+    const counts = await t.run(async (ctx) => ({
+      leads: (await ctx.db.query("leads").collect()).length,
+      emails: (await ctx.db.query("emailJobs").collect()).filter((j) => j.kind === "lead_alert").length,
+    }));
+    expect(counts).toEqual({ leads: 18, emails: 15 });
+    await expect(
+      t.mutation(api.leadForms.submit, { slug: form!.slug, answers: Object.fromEntries(Array.from({ length: 40 }, (_, i) => [`x${i}`, "y"])), elapsedMs: 9000 }),
+    ).rejects.toThrow(/doesn't match/);
+  });
+
+  test("Marketing-team accounts don't get the colleague directory", async () => {
+    const { t } = await setup();
+    const id = await t.run((ctx) => ctx.db.insert("users", { name: "Mia", email: "mia@one.test", role: "marketing", status: "active" }));
+    const mia = t.withIdentity({ subject: `${id}|session`, name: "Mia" });
+    expect(await mia.query(api.users.colleagues, {})).toEqual([]);
   });
 });
