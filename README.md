@@ -9,7 +9,7 @@ The internal operating platform for ONE Property Holdings: an Admin portal and a
 | Frontend | React 19 · TypeScript · Vite · Tailwind CSS v4 · Radix primitives (shadcn-style) · Lucide |
 | Backend | Convex (database, reactive queries, mutations, file storage, crons, actions) · Convex Auth |
 | Email | Dedicated Resend account (queued, rate-limited, de-duplicated, delivery webhooks; safe `log` mode by default) |
-| Hosting | Cloudflare Pages (static SPA + `_headers` security policy) |
+| Hosting | Cloudflare Workers static assets (SPA + `_headers` security policy) |
 | Mobile | Installable PWA (manifest, service worker, push handler) |
 
 ## Quick start

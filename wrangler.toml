@@ -1,5 +1,9 @@
-# Cloudflare Pages config for ONE HUB (static SPA, no Pages Functions).
-# Build command (set in the Pages dashboard): npm run build
+# Cloudflare Workers config for ONE HUB: a static SPA served as Workers static assets
+# (no Worker script). Workers Builds runs `npm run build`, then `npx wrangler deploy`.
 name = "one-hub"
 compatibility_date = "2026-10-01"
-pages_build_output_dir = "dist"
+
+[assets]
+directory = "./dist"
+# Unknown paths (client-side routes such as /directors/studio or /f/<form>) serve index.html.
+not_found_handling = "single-page-application"

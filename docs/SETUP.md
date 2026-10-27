@@ -1,6 +1,6 @@
 # Setup, environments & deployment
 
-> **Isolation rule:** ONE HUB gets its *own* Convex project, its *own* Cloudflare Pages project, its
+> **Isolation rule:** ONE HUB gets its *own* Convex project, its *own* Cloudflare Workers project, its
 > *own* Resend API key and sending (sub)domain. Do not reuse or modify any existing project, DNS
 > record, database or key.
 
@@ -34,20 +34,21 @@ npx convex env set --prod ONEHUB_BOOTSTRAP_ADMIN_EMAIL ...
 npx @convex-dev/auth --prod
 ```
 
-## 3. Cloudflare Pages (frontend)
+## 3. Cloudflare Workers (frontend)
 
-Create a **new** Pages project (e.g. `one-hub`) connected to this repo:
+The `one-hub` project is a **Worker with static assets** (Workers Builds), connected to this repo.
+`wrangler.toml` serves `dist` as assets with single-page-app fallback; there is no Worker script.
 
 | Setting | Value |
 |---|---|
 | Build command | `npx convex deploy --cmd 'npm run build'` (needs `CONVEX_DEPLOY_KEY` from the Convex prod deployment) or `npm run build` with `VITE_CONVEX_URL` set |
-| Output directory | `dist` (also declared in `wrangler.toml` as `pages_build_output_dir`) |
+| Deploy command | `npx wrangler deploy` (Workers Builds default) |
 | Node version | 22 (pinned in `.node-version`) |
-| Env vars | `CONVEX_DEPLOY_KEY` (secret) **or** `VITE_CONVEX_URL` |
+| Build env vars | `CONVEX_DEPLOY_KEY` (secret) **or** `VITE_CONVEX_URL` |
 
-`public/_redirects` provides SPA routing; `public/_headers` sets HSTS, CSP, frame and referrer policies
-(lead forms under `/f/*` are embeddable). Add a custom subdomain such as `hub.<domain>`. This adds one
-**new** DNS record only; leave all existing records untouched.
+Unknown paths fall back to `index.html` (`not_found_handling` in `wrangler.toml`); `public/_headers` sets
+HSTS, CSP, frame and referrer policies (lead forms under `/f/*` are embeddable). Add a custom subdomain such
+as `hub.<domain>`. This adds one **new** DNS record only; leave all existing records untouched.
 
 ## 4. Resend (email)
 

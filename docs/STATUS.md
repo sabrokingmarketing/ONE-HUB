@@ -50,6 +50,6 @@ is now shared through the **Marketing Studio** inside the Directors portal.
 
 1. **Convex**: run `npx convex dev` to create the dedicated `one-hub` project.
 2. **Resend**: create the dedicated ONE HUB Resend account and verify the dedicated sending domain `mailoneholdings.co.za`. See [RESEND_SETUP.md](RESEND_SETUP.md).
-3. **Cloudflare**: approve the `one-hub` Pages project and `hub.` subdomain.
+3. **Cloudflare**: approve the `one-hub` Workers project and `hub.` subdomain.
 4. **Brand check**: confirm `#F7931E` (sampled from the logo) is the official orange.
 5. **Bootstrap admin email** for the first Super Admin.
