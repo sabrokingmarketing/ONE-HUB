@@ -1,0 +1,5 @@
+# Cloudflare Pages config for ONE HUB (static SPA, no Pages Functions).
+# Build command (set in the Pages dashboard): npm run build
+name = "one-hub"
+compatibility_date = "2026-10-01"
+pages_build_output_dir = "dist"
