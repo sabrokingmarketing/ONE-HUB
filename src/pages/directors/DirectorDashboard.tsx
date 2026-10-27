@@ -69,15 +69,15 @@ export default function DirectorDashboard() {
       </div>
 
       {!d ? (
-        <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-[148px] rounded-2xl" />)}</div>
+        <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-[184px] rounded-2xl" />)}</div>
       ) : (
         <>
           {/* Row 2 — KPIs: four identical tiles */}
           <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
-            <StatCard tone="brand" label="New leads" value={d.newLeadCount} hint={`${d.followUps} follow-ups assigned to you`} icon={Inbox} to="/leads" />
+            <StatCard tone="brand" label="New leads" value={d.newLeadCount} hint={`${d.followUps} follow-ups for you`} icon={Inbox} to="/leads" />
             <StatCard tone="dark" label="Brokers" value={d.brokerCount} hint="Shared directory" icon={Contact} to="/directors/brokers" />
             <StatCard tone="dark" label="Employees" value={d.employeeCount} hint="Shared directory" icon={Users} to="/directors/employees" />
-            <StatCard tone="dark" label="Upcoming meetings" value={meetings?.length ?? "–"} hint="Next on your calendar" icon={CalendarDays} to="/calendar" />
+            <StatCard tone="dark" label="Meetings" value={meetings?.length ?? "–"} hint="Coming up" icon={CalendarDays} to="/calendar" />
           </div>
 
           {/* Row 3 — two equal panels, fixed height */}

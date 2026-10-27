@@ -78,9 +78,8 @@ Everything runs inside Convex, so nobody's browser needs to stay open.
 
 ## 7. Design system
 
-Tokens live in `src/index.css` (`@theme`). The brand orange (`--color-brand-*`, base `#F26B1D`) is a
-**temporary token**: the official ONE Property Holdings brand guide and website could not be accessed
-from the build environment. Swap the values and the `Logo` component once the assets are confirmed.
+Tokens live in `src/index.css` (`@theme`). The brand orange `#F7931E` (`--color-brand-500`) was sampled from the
+official ONE logo, which is used in the sidebar, sign-in page, favicons, PWA icons and emails.
 Light floating sidebar with icon tiles (active item: white card + orange tile), cool-grey canvas,
 borderless white cards with soft shadows, orange and charcoal KPI tiles. Dashboard rows use fixed,
 equal-size blocks with internal scrolling so no block outgrows its neighbours. Components: `src/components/ui/*` (Button, Input/Select/Field/Switch, Card, Badge,

@@ -11,7 +11,6 @@
     "typecheck": "tsc -b && tsc -p convex --noEmit && tsc -p tsconfig.sw.json",
     "test": "vitest run",
     "codegen:offline": "node scripts/offline-codegen.mjs",
-    "icons": "node scripts/generate-icons.mjs",
     "ui-harness": "vite --config scripts/ui-harness/vite.config.ts",
     "preview": "vite preview"
   },

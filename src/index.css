@@ -4,23 +4,21 @@
 
 /*
  * ONE HUB design tokens.
- * BRAND NOTE: the orange below is a TEMPORARY token. The official
- * ONE Property Holdings brand orange could not be verified from this
- * environment — replace --color-brand-* once the brand guide is confirmed.
+ * Brand orange sampled from the official ONE logo (src/assets/logo-one.webp): #F7931E.
  */
 @theme {
   --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
 
-  --color-brand-50: #fff5ed;
-  --color-brand-100: #ffe8d4;
-  --color-brand-200: #ffcda8;
-  --color-brand-300: #ffa970;
-  --color-brand-400: #fb8a43;
-  --color-brand-500: #f26b1d;
-  --color-brand-600: #e05512;
-  --color-brand-700: #b94011;
-  --color-brand-800: #933416;
-  --color-brand-900: #772d15;
+  --color-brand-50: #fff7ec;
+  --color-brand-100: #ffecd2;
+  --color-brand-200: #ffd6a3;
+  --color-brand-300: #ffbb66;
+  --color-brand-400: #fca43b;
+  --color-brand-500: #f7931e;
+  --color-brand-600: #e27a06;
+  --color-brand-700: #bb5e05;
+  --color-brand-800: #954a0b;
+  --color-brand-900: #793e0d;
 
   --color-ink: #18181b;
   --color-ink-soft: #27272a;

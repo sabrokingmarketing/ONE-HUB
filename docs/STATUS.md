@@ -12,7 +12,7 @@ its code remains in git history (commit `c52b941`) if it's needed later.
 | Repository | `sabrokingmarketing/one-hub`: empty apart from a README. New isolated project created here. |
 | Convex | No deployment linked. The build sandbox cannot reach Convex cloud, so functions were verified with **convex-test** and an offline codegen script. **Nothing was created or changed in any Convex account.** |
 | Cloudflare / Resend / domains | No credentials in the build environment. **Nothing was created or changed.** |
-| Brand | The ONE Property Holdings website was blocked by the build network, so the brand orange and logo are **temporary tokens** (`src/index.css`, `Logo.tsx`). |
+| Brand | Official ONE logo supplied and in use (`src/assets/logo-one.webp`, favicons, app icons, emails). Brand orange `#F7931E` sampled from the logo. |
 
 ## Done
 
@@ -50,5 +50,5 @@ its code remains in git history (commit `c52b941`) if it's needed later.
 1. **Convex**: run `npx convex dev` to create the dedicated `one-hub` project.
 2. **Resend**: approve a dedicated sending subdomain + API key and choose the From address.
 3. **Cloudflare**: approve the `one-hub` Pages project and `hub.` subdomain.
-4. **Brand assets**: official logo files and the exact orange (hex).
+4. **Brand check**: confirm `#F7931E` (sampled from the logo) is the official orange.
 5. **Bootstrap admin email** for the first Super Admin.

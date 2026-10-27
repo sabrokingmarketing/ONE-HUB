@@ -29,7 +29,7 @@ export default function AdminDashboard() {
       </div>
 
       {!d ? (
-        <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">{Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-[148px] rounded-2xl" />)}</div>
+        <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">{Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-[184px] rounded-2xl" />)}</div>
       ) : (
         <>
           {d.totals.emailFailures > 0 && (

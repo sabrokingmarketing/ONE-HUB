@@ -30,7 +30,7 @@ type Draft = {
 };
 
 const DEFAULT: Draft = {
-  title: "", description: "", thankYouMessage: "Thank you — a member of our team will be in touch shortly.", successUrl: "", notifyUserIds: [], status: "draft", propertyId: "", accentColor: "#F26B1D",
+  title: "", description: "", thankYouMessage: "Thank you — a member of our team will be in touch shortly.", successUrl: "", notifyUserIds: [], status: "draft", propertyId: "", accentColor: "#F7931E",
   fields: [
     { id: newId(), type: "first_name", label: "First name", required: true },
     { id: newId(), type: "last_name", label: "Last name", required: true },
@@ -60,7 +60,7 @@ export default function FormBuilder() {
     if (existing && !draft) {
       setDraft({
         title: existing.title, description: existing.description ?? "", fields: existing.fields, thankYouMessage: existing.thankYouMessage, successUrl: existing.successUrl ?? "",
-        notifyUserIds: existing.notifyUserIds, status: existing.status, propertyId: existing.propertyId ?? "", accentColor: existing.accentColor ?? "#F26B1D",
+        notifyUserIds: existing.notifyUserIds, status: existing.status, propertyId: existing.propertyId ?? "", accentColor: existing.accentColor ?? "#F7931E",
       });
       setVersion(existing.version);
     }

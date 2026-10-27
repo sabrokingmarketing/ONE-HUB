@@ -10,8 +10,9 @@ import { escapeHtml } from "./text";
  *   live → emails are delivered to their real recipients
  */
 
-// TEMPORARY brand token — replace with the verified ONE Property Holdings orange.
-const BRAND_ORANGE = "#F26B1D";
+// Brand orange sampled from the official ONE logo.
+const BRAND_ORANGE = "#F7931E";
+const logoUrl = () => `${(process.env.SITE_URL ?? "").replace(/\/$/, "")}/logo-one.png`;
 
 export type EmailMode = "log" | "test" | "live";
 
@@ -47,7 +48,7 @@ export function renderEmail(opts: {
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding:32px 12px"><tr><td align="center">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#fff;border-radius:16px;overflow:hidden;border:1px solid #E7E5E4">
 <tr><td style="height:4px;background:${BRAND_ORANGE}"></td></tr>
-<tr><td style="padding:28px 32px 8px"><span style="font-weight:800;font-size:18px;letter-spacing:.04em">ONE</span><span style="font-weight:500;font-size:18px;color:#78716C"> HUB</span></td></tr>
+<tr><td style="padding:28px 32px 8px">${process.env.SITE_URL ? `<img src="${logoUrl()}" alt="ONE" height="28" style="height:28px;width:auto;vertical-align:middle;border:0"/><span style="font-weight:700;font-size:12px;letter-spacing:.22em;color:#71717A;vertical-align:middle;padding-left:10px">HUB</span>` : `<span style="font-weight:800;font-size:18px;letter-spacing:.04em;color:${BRAND_ORANGE}">ONE</span><span style="font-weight:500;font-size:18px;color:#71717A"> HUB</span>`}</td></tr>
 <tr><td style="padding:16px 32px 32px;font-size:15px;line-height:1.6">
 ${badge}
 <h1 style="font-size:22px;line-height:1.3;margin:0 0 12px;color:#1C1917">${escapeHtml(opts.heading)}</h1>

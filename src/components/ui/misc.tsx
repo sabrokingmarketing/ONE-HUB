@@ -69,26 +69,28 @@ export function StatCard({ label, value, hint, icon: Icon, tone = "neutral", to,
   const solid = tone !== "neutral";
   const body = (
     <div className={cn(
-      "group flex h-full min-h-[148px] flex-col justify-between rounded-2xl p-5 transition-all",
+      // Fixed rhythm: 24px padding, icon row, then the figure pushed to the bottom with
+      // at least 28px of breathing room — tiles in a row always share one height.
+      "group flex h-full min-h-[184px] flex-col rounded-2xl p-6 transition-all",
       tone === "dark" ? "bg-ink text-white" : tone === "brand" ? "bg-brand-500 text-white" : "bg-white shadow-card",
       solid && "shadow-soft",
       to && "hover:-translate-y-0.5 hover:shadow-pop",
     )}>
-      <div className="flex items-start justify-between">
+      <div className="flex items-start justify-between gap-3">
         {Icon ? (
-          <span className={cn("grid size-10 place-items-center rounded-full", solid ? "bg-white text-zinc-900" : "bg-brand-50 text-brand-600")}>
-            <Icon className="size-[18px]" />
+          <span className={cn("grid size-11 shrink-0 place-items-center rounded-full", solid ? "bg-white text-zinc-900" : "bg-brand-50 text-brand-600")}>
+            <Icon className="size-5" />
           </span>
         ) : <span />}
-        <span className={cn("text-lg leading-none tracking-widest", solid ? "text-white/60" : "text-zinc-300")} aria-hidden>···</span>
+        <span className={cn("-mt-1 text-lg leading-none tracking-widest", solid ? "text-white/60" : "text-zinc-300")} aria-hidden>···</span>
       </div>
-      <div>
-        <div className="flex items-end justify-between gap-2">
-          <div className="text-[28px] leading-none font-bold tracking-tight tabular-nums">{value}</div>
+      <div className="mt-auto pt-7">
+        <div className="flex items-baseline justify-between gap-3">
+          <div className="text-[34px] leading-none font-bold tracking-tight tabular-nums">{value}</div>
           {trend && <span className={cn("text-xs font-semibold", solid ? "text-white" : "text-emerald-600")}>{trend}</span>}
         </div>
-        <div className={cn("mt-1.5 truncate text-[13px] font-medium", solid ? "text-white/75" : "text-zinc-500")}>{label}</div>
-        {hint && <div className={cn("mt-0.5 truncate text-xs", solid ? "text-white/60" : "text-zinc-400")}>{hint}</div>}
+        <div className={cn("mt-2.5 truncate text-sm font-semibold", tone === "brand" ? "text-white" : solid ? "text-white/85" : "text-zinc-600")}>{label}</div>
+        <div className={cn("mt-1 truncate text-xs", tone === "brand" ? "text-white/90" : solid ? "text-white/60" : "text-zinc-400", !hint && "invisible")}>{hint ?? " "}</div>
       </div>
     </div>
   );

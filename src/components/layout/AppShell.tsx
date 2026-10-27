@@ -105,7 +105,7 @@ function Sidebar({ portal, onNavigate }: { portal: Portal; onNavigate?: () => vo
                         <>
                           <span className={cn(
                             "grid size-8 shrink-0 place-items-center rounded-lg transition-all",
-                            isActive ? "bg-brand-500 text-white shadow-[0_4px_12px_-2px_rgb(242_107_29/0.5)]" : "bg-white text-zinc-600 shadow-soft group-hover:text-zinc-900",
+                            isActive ? "bg-brand-500 text-white shadow-[0_4px_12px_-2px_rgb(247_147_30/0.5)]" : "bg-white text-zinc-600 shadow-soft group-hover:text-zinc-900",
                           )}>
                             <it.icon className="size-4" />
                           </span>

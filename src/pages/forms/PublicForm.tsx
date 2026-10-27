@@ -19,7 +19,7 @@ export default function PublicForm() {
   const [error, setError] = useState<string | null>(null);
   const [thanks, setThanks] = useState("");
   const started = useRef(Date.now());
-  const accent = form?.accentColor ?? "#F26B1D";
+  const accent = form?.accentColor ?? "#F7931E";
   const style = useMemo(() => ({ "--accent": accent }) as React.CSSProperties, [accent]);
 
   const onSubmit = async (e: React.FormEvent) => {

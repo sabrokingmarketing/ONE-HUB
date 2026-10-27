@@ -8,7 +8,7 @@ const INPUT_TYPE: Partial<Record<FormField["type"], string>> = { email: "email",
 const AUTOCOMPLETE: Partial<Record<FormField["type"], string>> = { first_name: "given-name", last_name: "family-name", email: "email", phone: "tel", company: "organization", address: "street-address" };
 
 /** Renders the fields of a lead form. Used by both the builder preview and the public page. */
-export function FormRenderer({ fields, answers, onChange, accent = "#F26B1D", disabled }: { fields: FormField[]; answers: Answers; onChange: (a: Answers) => void; accent?: string; disabled?: boolean }) {
+export function FormRenderer({ fields, answers, onChange, accent = "#F7931E", disabled }: { fields: FormField[]; answers: Answers; onChange: (a: Answers) => void; accent?: string; disabled?: boolean }) {
   const set = (id: string, v: string | string[] | boolean) => onChange({ ...answers, [id]: v });
   return (
     <div className="grid gap-4 sm:grid-cols-2">
