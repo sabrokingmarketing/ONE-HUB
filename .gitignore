@@ -7,3 +7,6 @@ dev-dist
 *.log
 .convex
 .DS_Store
+
+# Wrangler local dev state
+.wrangler/
