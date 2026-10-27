@@ -133,14 +133,15 @@ export default function StudioPage() {
               className="h-11 w-full rounded-2xl bg-zinc-100/80 pr-3 pl-10 text-sm outline-none placeholder:text-zinc-400 focus:bg-white focus:ring-2 focus:ring-brand-500/50" />
           </label>
 
-          {/* Mobile: compact category chips */}
-          <div className="scrollbar-none -mx-4 flex gap-2 overflow-x-auto px-4 lg:hidden">
-            {[{ key: "", count: overview?.total ?? 0 }, ...(overview?.categories ?? [])].map((c) => (
-              <button key={c.key || "all"} onClick={() => { setCategory(c.key); if (tab === "collections") setTab("all"); }}
-                className={cn("h-9 shrink-0 rounded-full px-3.5 text-[13px] font-semibold transition", category === c.key ? "bg-ink text-white" : "bg-zinc-100 text-zinc-600")}>
-                {c.key || "All"} <span className="opacity-60">{c.count}</span>
-              </button>
-            ))}
+          {/* Mobile: compact filters that always fit inside the card */}
+          <div className="grid grid-cols-2 gap-2 lg:hidden">
+            <Select aria-label="Category" value={category} onChange={(e) => { setCategory(e.target.value); if (tab === "collections") setTab("all"); }} className="h-11 min-w-0 rounded-2xl bg-zinc-100/80 ring-0">
+              <option value="">All files ({overview?.total ?? 0})</option>
+              {overview?.categories.map((c) => <option key={c.key} value={c.key}>{c.key} ({c.count})</option>)}
+            </Select>
+            <Select aria-label="Sort" value={sort} onChange={(e) => setSort(e.target.value as typeof sort)} className="h-11 min-w-0 rounded-2xl bg-zinc-100/80 ring-0">
+              <option value="newest">Last updated</option><option value="name">Name A–Z</option><option value="popular">Most downloaded</option>
+            </Select>
           </div>
 
           <div className="hidden lg:block">
