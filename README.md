@@ -8,7 +8,7 @@ The internal operating platform for ONE Property Holdings: an Admin portal and a
 |---|---|
 | Frontend | React 19 · TypeScript · Vite · Tailwind CSS v4 · Radix primitives (shadcn-style) · Lucide |
 | Backend | Convex (database, reactive queries, mutations, file storage, crons, actions) · Convex Auth |
-| Email | Resend (queued, rate-limited, de-duplicated; safe `log` mode by default) |
+| Email | Dedicated Resend account (queued, rate-limited, de-duplicated, delivery webhooks; safe `log` mode by default) |
 | Hosting | Cloudflare Pages (static SPA + `_headers` security policy) |
 | Mobile | Installable PWA (manifest, service worker, push handler) |
 
@@ -42,5 +42,6 @@ Then open `http://localhost:5173/accept-invite?bootstrap=1` and create the first
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md): architecture, data model, sitemap, permissions, background jobs
 - [`docs/SETUP.md`](docs/SETUP.md): environments, deployment, onboarding
 - [`docs/INTEGRATIONS.md`](docs/INTEGRATIONS.md): Resend, calendars, Web Push. What needs external approval.
+- [`docs/RESEND_SETUP.md`](docs/RESEND_SETUP.md): step-by-step setup and test plan for ONE HUB's dedicated Resend account.
 - [`docs/FREE_TIER.md`](docs/FREE_TIER.md): provider limits and how ONE HUB stays within them
 - [`docs/SECURITY_POPIA.md`](docs/SECURITY_POPIA.md): security model and POPIA obligations

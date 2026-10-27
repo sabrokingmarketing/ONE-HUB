@@ -7,7 +7,7 @@ No integration is shown as "Verified" in the app until a real end-to-end call ha
 | Integration | Status | External approval needed |
 |---|---|---|
 | Convex Auth (email + password, invite-only, reset by email code) | Built | None |
-| Resend transactional email + announcement queue | Built, unverified | New API key + verified sending subdomain |
+| Resend transactional email + announcement queue + delivery webhooks + sending-limit pacing | Built, unverified | Dedicated ONE HUB Resend account, API key, verified `hub.` sending domain, webhook secret. See [RESEND_SETUP.md](RESEND_SETUP.md) |
 | Google Calendar | Planned | Google Cloud project, OAuth consent screen; `calendar.events` is a *sensitive* scope (for an internal Google Workspace org, mark the app "Internal" to skip verification) |
 | Microsoft Outlook Calendar (Graph) | Planned | Microsoft Entra app registration (`Calendars.ReadWrite`, `offline_access`); tenant admin consent |
 | Web Push | Partially built (service-worker `push` + `notificationclick` handlers, `pushSubscriptions` table) | VAPID key pair; iOS needs the installed PWA (16.4+) |

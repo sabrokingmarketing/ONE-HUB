@@ -8,7 +8,7 @@ import { internal } from "../_generated/api";
  */
 export async function enqueueEmail(
   ctx: MutationCtx,
-  job: { kind: string; to: string; subject: string; html: string; dedupeKey: string; announcementId?: Id<"announcements"> },
+  job: { kind: string; to: string; subject: string; html?: string; dedupeKey: string; announcementId?: Id<"announcements"> },
   opts: { kick?: boolean } = { kick: true },
 ) {
   const existing = await ctx.db

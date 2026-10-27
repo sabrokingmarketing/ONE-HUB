@@ -26,7 +26,7 @@ is now shared through the **Marketing Studio** inside the Directors portal.
 **Directors portal**
 - Dashboard: quick actions, KPI tiles, new-leads table, meetings timeline, recent brokers, employee updates, announcements and documents.
 - Broker directory: CRUD, search, filters, archive/restore, duplicate detection, share without internal notes (copy, Maps, vCard, native share), CSV/XLSX import wizard, CSV export.
-- Employee directory: the same features plus profile photos, and **Send Employee Update** (templates, recipients, preview, test send, confirmation, dedupe, delivery tally).
+- Employee directory: the same features plus profile photos, and **Send Employee Update** (templates, recipients, preview, test send, confirmation, dedupe, per-recipient delivery results confirmed by Resend webhooks, automatic pacing within the free plan's daily limit).
 - **Marketing Studio**: the marketing team's library of booklets, brochures, designs, social media, presentations, videos, photography, brand files, templates and documents. It has category tiles, featured material, search/filters/sort, grid and list views, in-browser preview (images, video, PDF), one-click download with download counts, collections, cover images, versioning, archive, and optional notifications to directors. Uploaded by the new **Marketing team** role (studio-only access); directors view and download.
 - Leads, lead form builder (public forms with spam protection; share by link, email, WhatsApp, embed, QR), calendar & meetings with reminders, properties, shared documents (upload, versions, categories, tags).
 
@@ -35,22 +35,21 @@ is now shared through the **Marketing Studio** inside the Directors portal.
 
 **PWA**: manifest, icons, service worker (app shell only), update prompt, push handlers.
 
-**Quality**: `npm run typecheck`, `npm test` (16 backend tests) and `npm run build` all pass. UI reviewed at desktop and mobile widths with the dev-only harness.
+**Quality**: `npm run typecheck`, `npm test` (25 backend tests) and `npm run build` all pass. UI reviewed at desktop and mobile widths with the dev-only harness.
 
 ## Remaining
 
 | Work |
 |---|
 | Google Calendar & Outlook sync (OAuth), Web Push sending + permission UI |
-| Resend delivery webhooks → email status |
 | End-to-end tests against a real dev deployment, accessibility audit |
 | Production deployment (needs approval), custom domain, onboarding |
-| Automated lead retention job; day-spanning email batching |
+| Automated lead retention job |
 
 ## Blockers / decisions needed
 
 1. **Convex**: run `npx convex dev` to create the dedicated `one-hub` project.
-2. **Resend**: approve a dedicated sending subdomain + API key and choose the From address.
+2. **Resend**: create the dedicated ONE HUB Resend account and verify the dedicated sending domain `mailoneholdings.co.za`. See [RESEND_SETUP.md](RESEND_SETUP.md).
 3. **Cloudflare**: approve the `one-hub` Pages project and `hub.` subdomain.
 4. **Brand check**: confirm `#F7931E` (sampled from the logo) is the official orange.
 5. **Bootstrap admin email** for the first Super Admin.

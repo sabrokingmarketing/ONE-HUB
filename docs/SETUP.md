@@ -50,18 +50,19 @@ Create a **new** Pages project (e.g. `one-hub`) connected to this repo:
 
 ## 4. Resend (email)
 
-1. In the existing Resend account, add a **new sending subdomain** (e.g. `mail.hub.<domain>`) and
-   verify its DNS records. This doesn't affect existing domains.
-2. Create a **new API key** restricted to "Sending access" for that domain.
-3. Configure:
+ONE HUB uses a **dedicated Resend account**, separate from every other business or website. Follow
+[`RESEND_SETUP.md`](RESEND_SETUP.md) step by step: account, sending domain and DNS, API key, delivery
+webhook, environment variables and the controlled test plan. In short:
+
 ```bash
-npx convex env set RESEND_API_KEY re_xxx
-npx convex env set ONEHUB_EMAIL_FROM "ONE HUB <hub@mail.hub.<domain>>"
+npx convex env set RESEND_API_KEY 're_…'            # ONE HUB's own key, "Sending access"
+npx convex env set RESEND_WEBHOOK_SECRET 'whsec_…'  # webhook → https://<deployment>.convex.site/resend/webhook
+npx convex env set ONEHUB_EMAIL_FROM '"ONE Property Holdings | Internal Communications" <notifications@mailoneholdings.co.za>'
 npx convex env set ONEHUB_EMAIL_MODE test                  # log | test | live
-npx convex env set ONEHUB_EMAIL_TEST_RECIPIENT you@company.co.za
+npx convex env set ONEHUB_EMAIL_TEST_RECIPIENT approved-test-address
 ```
 `log` (default) sends nothing. `test` redirects every email to the test inbox. Switch to `live`
-only after approving real sends.
+only after the owners approve real sends.
 
 ## 5. Onboarding users
 
