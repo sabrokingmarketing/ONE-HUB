@@ -12,8 +12,8 @@ export function Logo({ dark, compact }: { dark?: boolean; compact?: boolean }) {
       </span>
       {!compact && (
         <span className="leading-none">
-          <span className={cn("text-[15px] font-extrabold tracking-[0.12em]", dark ? "text-stone-900" : "text-white")}>ONE</span>
-          <span className={cn("ml-1 text-[15px] font-medium tracking-[0.08em]", dark ? "text-stone-400" : "text-stone-400")}>HUB</span>
+          <span className={cn("text-[15px] font-extrabold tracking-[0.12em]", dark ? "text-zinc-900" : "text-white")}>ONE</span>
+          <span className={cn("ml-1 text-[15px] font-medium tracking-[0.08em]", dark ? "text-zinc-400" : "text-zinc-400")}>HUB</span>
         </span>
       )}
     </span>

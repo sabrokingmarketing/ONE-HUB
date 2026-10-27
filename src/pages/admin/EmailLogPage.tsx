@@ -15,15 +15,15 @@ export default function EmailLogPage() {
         {!data ? <LoadingRows /> : data.jobs.length === 0 ? <EmptyState icon={Mail} title="No emails yet" /> : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[720px] text-sm">
-              <thead className="bg-stone-50/80 text-left text-xs font-medium text-stone-500"><tr><th className="px-5 py-3">Recipient</th><th className="px-5 py-3">Subject</th><th className="px-5 py-3">Type</th><th className="px-5 py-3">Status</th><th className="px-5 py-3">Queued</th></tr></thead>
-              <tbody className="divide-y divide-stone-100">
+              <thead className="border-b border-zinc-100 text-left text-[11px] font-bold tracking-wider text-zinc-400 uppercase"><tr><th className="px-5 py-3">Recipient</th><th className="px-5 py-3">Subject</th><th className="px-5 py-3">Type</th><th className="px-5 py-3">Status</th><th className="px-5 py-3">Queued</th></tr></thead>
+              <tbody className="divide-y divide-zinc-100">
                 {data.jobs.map((j) => (
                   <tr key={j._id}>
                     <td className="px-5 py-3">{j.to}</td>
-                    <td className="max-w-xs truncate px-5 py-3 text-stone-700">{j.subject}</td>
+                    <td className="max-w-xs truncate px-5 py-3 text-zinc-700">{j.subject}</td>
                     <td className="px-5 py-3"><Badge>{j.kind.replace(/_/g, " ")}</Badge></td>
                     <td className="px-5 py-3"><StatusBadge status={j.status} />{j.error && <div className="mt-1 max-w-xs truncate text-xs text-red-600" title={j.error}>{j.error}</div>}</td>
-                    <td className="px-5 py-3 text-stone-500">{formatDateTime(j._creationTime)}</td>
+                    <td className="px-5 py-3 text-zinc-500">{formatDateTime(j._creationTime)}</td>
                   </tr>
                 ))}
               </tbody>

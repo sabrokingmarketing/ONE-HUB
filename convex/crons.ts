@@ -8,11 +8,7 @@ import { internal } from "./_generated/api";
  */
 const crons = cronJobs();
 
-crons.interval("publish due social posts", { minutes: 1 }, internal.socialPosts.enqueueDue, {});
 crons.interval("send meeting reminders", { minutes: 5 }, internal.meetings.sendDueReminders, {});
 crons.interval("recover email queue", { minutes: 10 }, internal.emails.recoverStuck, {});
-crons.interval("recover publishing jobs", { minutes: 15 }, internal.socialPosts.recoverStuck, {});
-
-crons.daily("refresh social tokens", { hourUTC: 1, minuteUTC: 17 }, internal.socialAuth.refreshTokens, {});
 
 export default crons;

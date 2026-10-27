@@ -63,15 +63,15 @@ export default function EmployeesPage() {
         {status === "LoadingFirstPage" ? <LoadingRows /> : results.length === 0 ? (
           <EmptyState icon={Users} title={dq ? "No employees match" : "No employees yet"} description={!dq ? "Add employees one by one or import a spreadsheet." : undefined} action={!dq && can("employees.write") ? <Button onClick={() => setOpen(true)}><Plus /> Add employee</Button> : undefined} />
         ) : (
-          <ul className="grid divide-y divide-stone-100 md:grid-cols-2 md:divide-y-0 xl:grid-cols-3">
+          <ul className="grid divide-y divide-zinc-100 md:grid-cols-2 md:divide-y-0 xl:grid-cols-3">
             {results.map((e) => (
-              <li key={e._id} className="md:border-b md:border-stone-100">
-                <Link to={`/directors/employees/${e._id}`} className="flex items-center gap-3 px-5 py-4 hover:bg-stone-50/60">
+              <li key={e._id} className="md:border-b md:border-zinc-100">
+                <Link to={`/directors/employees/${e._id}`} className="flex items-center gap-3 px-5 py-4 hover:bg-zinc-50/60">
                   <Avatar name={`${e.firstName} ${e.lastName}`} />
                   <div className="min-w-0 flex-1">
-                    <div className="truncate font-medium text-stone-900">{e.firstName} {e.lastName}</div>
-                    <div className="truncate text-xs text-stone-500">{[e.jobTitle, e.department].filter(Boolean).join(" · ") || e.email || "—"}</div>
-                    <div className="mt-0.5 text-[11px] text-stone-400">Updated {timeAgo(e.updatedAt)}</div>
+                    <div className="truncate font-medium text-zinc-900">{e.firstName} {e.lastName}</div>
+                    <div className="truncate text-xs text-zinc-500">{[e.jobTitle, e.department].filter(Boolean).join(" · ") || e.email || "—"}</div>
+                    <div className="mt-0.5 text-[11px] text-zinc-400">Updated {timeAgo(e.updatedAt)}</div>
                   </div>
                   {e.employmentStatus !== "active" && <StatusBadge status={e.employmentStatus} />}
                 </Link>
@@ -79,7 +79,7 @@ export default function EmployeesPage() {
             ))}
           </ul>
         )}
-        {status === "CanLoadMore" && <div className="border-t border-stone-100 p-3 text-center"><Button variant="ghost" onClick={() => loadMore(30)}>Load more</Button></div>}
+        {status === "CanLoadMore" && <div className="border-t border-zinc-100 p-3 text-center"><Button variant="ghost" onClick={() => loadMore(30)}>Load more</Button></div>}
       </Card>
       <Sheet open={open} onOpenChange={setOpen} title="Add employee" wide footer={<><Button variant="ghost" onClick={() => setOpen(false)}>Cancel</Button><Button type="submit" form="employee-form" loading={creating}>Save employee</Button></>}>
         <EmployeeForm value={draft} onChange={setDraft} onSubmit={() => void save()} departments={departments?.map((d) => d.name)} />

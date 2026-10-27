@@ -33,7 +33,6 @@ const EmployeesPage = lazy(() => import("./pages/directors/EmployeesPage"));
 const EmployeeProfile = lazy(() => import("./pages/directors/EmployeeProfile"));
 const AnnouncementsPage = lazy(() => import("./pages/directors/AnnouncementsPage"));
 const DocumentsPage = lazy(() => import("./pages/directors/DocumentsPage"));
-const DirectorMarketingPage = lazy(() => import("./pages/directors/DirectorMarketingPage"));
 const ImportPage = lazy(() => import("./pages/directors/ImportPage"));
 
 const LeadsPage = lazy(() => import("./pages/leads/LeadsPage"));
@@ -43,15 +42,6 @@ const FormBuilder = lazy(() => import("./pages/forms/FormBuilder"));
 const CalendarPage = lazy(() => import("./pages/calendar/CalendarPage"));
 const PropertiesPage = lazy(() => import("./pages/properties/PropertiesPage"));
 const PropertyProfile = lazy(() => import("./pages/properties/PropertyProfile"));
-
-const MarketingDashboard = lazy(() => import("./pages/marketing/MarketingDashboard"));
-const SocialPage = lazy(() => import("./pages/marketing/SocialPage"));
-const PostComposer = lazy(() => import("./pages/marketing/PostComposer"));
-const AccountsPage = lazy(() => import("./pages/marketing/AccountsPage"));
-const CampaignsPage = lazy(() => import("./pages/marketing/CampaignsPage"));
-const CampaignDetail = lazy(() => import("./pages/marketing/CampaignDetail"));
-const LibraryPage = lazy(() => import("./pages/marketing/LibraryPage"));
-const IdeasPage = lazy(() => import("./pages/marketing/IdeasPage"));
 
 const NotificationsPage = lazy(() => import("./pages/NotificationsPage"));
 const AccountSettings = lazy(() => import("./pages/AccountSettings"));
@@ -65,7 +55,7 @@ function Splash() {
 }
 
 function PageFallback() {
-  return <div className="h-40 animate-pulse rounded-2xl bg-stone-200/50" />;
+  return <div className="h-40 animate-pulse rounded-2xl bg-zinc-200/50" />;
 }
 
 function Guard({ perm, children }: { perm?: Permission[]; children: React.ReactNode }) {
@@ -94,7 +84,7 @@ function Authenticated() {
   if (!me.role || me.status === "suspended") {
     return (
       <div className="grid min-h-dvh place-items-center bg-canvas p-6">
-        <div className="max-w-md rounded-2xl bg-white p-6 shadow-card ring-1 ring-stone-200">
+        <div className="max-w-md rounded-2xl bg-white p-6 shadow-card ring-1 ring-zinc-200">
           <EmptyState icon={ShieldOff} title={me.status === "suspended" ? "Your account is suspended" : "Your account is not active"} description="Please contact a ONE HUB administrator." action={<Button variant="secondary" onClick={() => void signOut()}>Sign out</Button>} />
         </div>
       </div>
@@ -123,27 +113,16 @@ function Authenticated() {
           <Route path="directors/employees/import" element={<Guard perm={["employees.write"]}><ImportPage entity="employees" /></Guard>} />
           <Route path="directors/employees/announcements" element={<Guard perm={["announcements.send"]}><AnnouncementsPage /></Guard>} />
           <Route path="directors/employees/:id" element={<Guard perm={["employees.read"]}><EmployeeProfile /></Guard>} />
-          <Route path="directors/documents" element={<Guard perm={["library.read"]}><DocumentsPage /></Guard>} />
-          <Route path="directors/marketing" element={<Guard perm={["campaigns.read"]}><DirectorMarketingPage /></Guard>} />
+          <Route path="directors/documents" element={<Guard perm={["documents.read"]}><DocumentsPage /></Guard>} />
           {/* Shared business */}
-          <Route path="leads" element={<Guard perm={["leads.read_all", "leads.read_authorized"]}><LeadsPage /></Guard>} />
-          <Route path="leads/:id" element={<Guard perm={["leads.read_all", "leads.read_authorized"]}><LeadDetail /></Guard>} />
+          <Route path="leads" element={<Guard perm={["leads.read"]}><LeadsPage /></Guard>} />
+          <Route path="leads/:id" element={<Guard perm={["leads.read"]}><LeadDetail /></Guard>} />
           <Route path="forms" element={<Guard perm={["forms.read"]}><FormsPage /></Guard>} />
           <Route path="forms/new" element={<Guard perm={["forms.write"]}><FormBuilder /></Guard>} />
           <Route path="forms/:id" element={<Guard perm={["forms.read"]}><FormBuilder /></Guard>} />
-          <Route path="calendar" element={<Guard perm={["meetings.manage", "meetings.view_invited", "calendar.personal"]}><CalendarPage /></Guard>} />
+          <Route path="calendar" element={<Guard perm={["meetings.manage", "calendar.personal"]}><CalendarPage /></Guard>} />
           <Route path="properties" element={<Guard perm={["properties.read"]}><PropertiesPage /></Guard>} />
           <Route path="properties/:id" element={<Guard perm={["properties.read"]}><PropertyProfile /></Guard>} />
-          {/* Marketing */}
-          <Route path="marketing" element={<Guard perm={["dashboard.marketing", "dashboard.admin"]}><MarketingDashboard /></Guard>} />
-          <Route path="marketing/social" element={<Guard perm={["social.read"]}><SocialPage /></Guard>} />
-          <Route path="marketing/social/new" element={<Guard perm={["social.write"]}><PostComposer /></Guard>} />
-          <Route path="marketing/social/posts/:id" element={<Guard perm={["social.read"]}><PostComposer /></Guard>} />
-          <Route path="marketing/social/accounts" element={<Guard perm={["social.read"]}><AccountsPage /></Guard>} />
-          <Route path="marketing/campaigns" element={<Guard perm={["campaigns.read"]}><CampaignsPage /></Guard>} />
-          <Route path="marketing/campaigns/:id" element={<Guard perm={["campaigns.read"]}><CampaignDetail /></Guard>} />
-          <Route path="marketing/library" element={<Guard perm={["library.write"]}><LibraryPage /></Guard>} />
-          <Route path="marketing/ideas" element={<Guard perm={["ideas.read"]}><IdeasPage /></Guard>} />
           {/* Personal */}
           <Route path="notifications" element={<Guard><NotificationsPage /></Guard>} />
           <Route path="settings" element={<Guard><AccountSettings /></Guard>} />

@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "convex/react";
-import { Building2, Pencil, Contact, Target, ClipboardList, FileText, Archive, RotateCcw } from "lucide-react";
+import { Building2, Pencil, Contact, ClipboardList, FileText, Archive, RotateCcw } from "lucide-react";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { PageHeader, Skeleton, EmptyState, DefinitionList } from "@/components/ui/misc";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge, StatusBadge } from "@/components/ui/badge";
+import { Badge } from "@/components/ui/badge";
 import { Sheet } from "@/components/ui/dialog";
 import { ChangedBanner } from "@/components/ChangedBanner";
 import { useAction } from "@/lib/hooks";
@@ -25,8 +25,8 @@ export default function PropertyProfile() {
   if (p === null) return <EmptyState icon={Building2} title="Property not found" />;
 
   const Linked = ({ title, icon: Icon, items, empty }: { title: string; icon: typeof Contact; items: { key: string; label: string; to?: string; extra?: React.ReactNode }[]; empty: string }) => (
-    <Card><CardHeader title={<span className="flex items-center gap-2"><Icon className="size-4 text-stone-400" />{title}</span>} description={`${items.length} linked`} />
-      <CardBody className="pt-3">{items.length === 0 ? <p className="text-sm text-stone-500">{empty}</p> : <ul className="divide-y divide-stone-100">{items.map((i) => <li key={i.key} className="flex items-center justify-between gap-3 py-2.5 text-sm">{i.to ? <Link className="font-medium hover:text-brand-600" to={i.to}>{i.label}</Link> : <span>{i.label}</span>}{i.extra}</li>)}</ul>}</CardBody>
+    <Card><CardHeader title={<span className="flex items-center gap-2"><Icon className="size-4 text-zinc-400" />{title}</span>} description={`${items.length} linked`} />
+      <CardBody className="pt-3">{items.length === 0 ? <p className="text-sm text-zinc-500">{empty}</p> : <ul className="divide-y divide-zinc-100">{items.map((i) => <li key={i.key} className="flex items-center justify-between gap-3 py-2.5 text-sm">{i.to ? <Link className="font-medium hover:text-brand-600" to={i.to}>{i.label}</Link> : <span>{i.label}</span>}{i.extra}</li>)}</ul>}</CardBody>
     </Card>
   );
 
@@ -45,10 +45,9 @@ export default function PropertyProfile() {
           ]} />
         </CardBody></Card>
         <div className="space-y-6">
-          {can("brokers.read") && <Linked title="Brokers" icon={Contact} items={p.brokers.map((b) => ({ key: b._id, label: b.fullName, to: `/directors/brokers/${b._id}`, extra: <span className="text-xs text-stone-400">{b.company}</span> }))} empty="No brokers linked." />}
-          {can("campaigns.read") && <Linked title="Campaigns" icon={Target} items={p.campaigns.map((c) => ({ key: c._id, label: c.name, to: `/marketing/campaigns/${c._id}`, extra: <StatusBadge status={c.status} /> }))} empty="No campaigns." />}
-          <Linked title="Lead forms" icon={ClipboardList} items={p.forms.map((f) => ({ key: f._id, label: f.title, to: `/forms/${f._id}`, extra: <span className="text-xs text-stone-400">{f.submissionCount} leads</span> }))} empty="No lead forms." />
-          <Linked title="Marketing assets" icon={FileText} items={p.assets.map((a) => ({ key: a._id, label: a.name, extra: <span className="text-xs text-stone-400">{a.category}</span> }))} empty="No assets." />
+          {can("brokers.read") && <Linked title="Brokers" icon={Contact} items={p.brokers.map((b) => ({ key: b._id, label: b.fullName, to: `/directors/brokers/${b._id}`, extra: <span className="text-xs text-zinc-400">{b.company}</span> }))} empty="No brokers linked." />}
+          <Linked title="Lead forms" icon={ClipboardList} items={p.forms.map((f) => ({ key: f._id, label: f.title, to: `/forms/${f._id}`, extra: <span className="text-xs text-zinc-400">{f.submissionCount} leads</span> }))} empty="No lead forms." />
+          <Linked title="Documents" icon={FileText} items={p.documents.map((a) => ({ key: a._id, label: a.name, to: `/directors/documents?doc=${a._id}`, extra: <span className="text-xs text-zinc-400">{a.category}</span> }))} empty="No documents." />
         </div>
       </div>
       <Sheet open={!!editing} onOpenChange={(o) => !o && setEditing(null)} title={`Edit ${p.name}`} wide footer={<><Button variant="ghost" onClick={() => setEditing(null)}>Cancel</Button><Button type="submit" form="property-edit" loading={saving}>Save</Button></>}>

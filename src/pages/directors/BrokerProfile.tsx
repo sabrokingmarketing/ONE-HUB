@@ -83,13 +83,13 @@ export default function BrokerProfile() {
         <div className="space-y-6">
           <Card>
             <CardHeader title="Internal notes" description="Confidential — never shared." />
-            <CardBody><p className="text-sm whitespace-pre-wrap text-stone-700">{b.notes || <span className="text-stone-400">No notes.</span>}</p></CardBody>
+            <CardBody><p className="text-sm whitespace-pre-wrap text-zinc-700">{b.notes || <span className="text-zinc-400">No notes.</span>}</p></CardBody>
           </Card>
           <Card>
             <CardHeader title="Record" />
-            <CardBody className="space-y-1 text-sm text-stone-600">
-              <div>Created by <span className="font-medium text-stone-800">{b.createdByName}</span> · {formatDateTime(b._creationTime)}</div>
-              <div>Last updated by <span className="font-medium text-stone-800">{b.updatedByName}</span> · {formatDateTime(b.updatedAt)}</div>
+            <CardBody className="space-y-1 text-sm text-zinc-600">
+              <div>Created by <span className="font-medium text-zinc-800">{b.createdByName}</span> · {formatDateTime(b._creationTime)}</div>
+              <div>Last updated by <span className="font-medium text-zinc-800">{b.updatedByName}</span> · {formatDateTime(b.updatedAt)}</div>
               {can("brokers.write") && (
                 <div className="pt-3">{b.archivedAt
                   ? <Button variant="secondary" size="sm" loading={archiving} onClick={() => void setArchived({ id: b._id, archived: false })}><RotateCcw /> Restore</Button>

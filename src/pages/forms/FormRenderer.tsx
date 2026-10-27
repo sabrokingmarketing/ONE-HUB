@@ -15,7 +15,7 @@ export function FormRenderer({ fields, answers, onChange, accent = "#F26B1D", di
       {fields.map((f) => {
         const half = ["first_name", "last_name", "email", "phone"].includes(f.type);
         const id = `f-${f.id}`;
-        const label = <label htmlFor={id} className="text-[13px] font-medium text-stone-700">{f.label}{f.required && <span style={{ color: accent }}> *</span>}</label>;
+        const label = <label htmlFor={id} className="text-[13px] font-medium text-zinc-700">{f.label}{f.required && <span style={{ color: accent }}> *</span>}</label>;
         let control: React.ReactNode;
         switch (f.type) {
           case "textarea":
@@ -38,7 +38,7 @@ export function FormRenderer({ fields, answers, onChange, accent = "#F26B1D", di
           }
           case "consent":
             return (
-              <label key={f.id} className="flex items-start gap-3 rounded-xl bg-stone-50 p-3 text-sm text-stone-700 sm:col-span-2">
+              <label key={f.id} className="flex items-start gap-3 rounded-xl bg-zinc-50 p-3 text-sm text-zinc-700 sm:col-span-2">
                 <input type="checkbox" className="mt-0.5" required={f.required} disabled={disabled} checked={answers[f.id] === true} onChange={(e) => set(f.id, e.target.checked)} style={{ accentColor: accent }} />
                 <span>{f.label}{f.required && <span style={{ color: accent }}> *</span>}</span>
               </label>

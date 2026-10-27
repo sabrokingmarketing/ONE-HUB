@@ -87,28 +87,28 @@ export default function BrokersPage() {
           <>
             <div className="hidden overflow-x-auto md:block">
               <table className="w-full text-sm">
-                <thead className="bg-stone-50/80 text-left text-xs font-medium text-stone-500"><tr><th className="px-5 py-3">Broker</th><th className="px-5 py-3">Contact</th><th className="px-5 py-3">Region</th><th className="px-5 py-3">Status</th><th className="px-5 py-3">Updated</th></tr></thead>
-                <tbody className="divide-y divide-stone-100">
+                <thead className="border-b border-zinc-100 text-left text-[11px] font-bold tracking-wider text-zinc-400 uppercase"><tr><th className="px-5 py-3">Broker</th><th className="px-5 py-3">Contact</th><th className="px-5 py-3">Region</th><th className="px-5 py-3">Status</th><th className="px-5 py-3">Updated</th></tr></thead>
+                <tbody className="divide-y divide-zinc-100">
                   {results.map((b) => (
-                    <tr key={b._id} className="cursor-pointer hover:bg-stone-50/60" onClick={() => navigate(`/directors/brokers/${b._id}`)}>
-                      <td className="px-5 py-3"><div className="flex items-center gap-3"><Avatar name={b.fullName} size="sm" /><div><div className="font-medium text-stone-900">{b.fullName}</div><div className="text-xs text-stone-500">{[b.position, b.company].filter(Boolean).join(" · ") || "—"}</div></div></div></td>
-                      <td className="px-5 py-3 text-stone-600"><div>{b.email ?? "—"}</div><div className="text-xs text-stone-400">{b.mobile}</div></td>
-                      <td className="px-5 py-3 text-stone-600">{[b.region, b.province].filter(Boolean).join(", ") || "—"}</td>
+                    <tr key={b._id} className="cursor-pointer hover:bg-zinc-50/60" onClick={() => navigate(`/directors/brokers/${b._id}`)}>
+                      <td className="px-5 py-3"><div className="flex items-center gap-3"><Avatar name={b.fullName} size="sm" /><div><div className="font-medium text-zinc-900">{b.fullName}</div><div className="text-xs text-zinc-500">{[b.position, b.company].filter(Boolean).join(" · ") || "—"}</div></div></div></td>
+                      <td className="px-5 py-3 text-zinc-600"><div>{b.email ?? "—"}</div><div className="text-xs text-zinc-400">{b.mobile}</div></td>
+                      <td className="px-5 py-3 text-zinc-600">{[b.region, b.province].filter(Boolean).join(", ") || "—"}</td>
                       <td className="px-5 py-3"><StatusBadge status={b.contactStatus} /></td>
-                      <td className="px-5 py-3 text-stone-500">{timeAgo(b.updatedAt)}</td>
+                      <td className="px-5 py-3 text-zinc-500">{timeAgo(b.updatedAt)}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-            <ul className="divide-y divide-stone-100 md:hidden">
+            <ul className="divide-y divide-zinc-100 md:hidden">
               {results.map((b) => (
-                <li key={b._id}><Link to={`/directors/brokers/${b._id}`} className="flex items-center gap-3 px-4 py-3.5"><Avatar name={b.fullName} /><div className="min-w-0 flex-1"><div className="truncate font-medium">{b.fullName}</div><div className="truncate text-xs text-stone-500">{b.company ?? b.email ?? "—"}</div></div><StatusBadge status={b.contactStatus} /></Link></li>
+                <li key={b._id}><Link to={`/directors/brokers/${b._id}`} className="flex items-center gap-3 px-4 py-3.5"><Avatar name={b.fullName} /><div className="min-w-0 flex-1"><div className="truncate font-medium">{b.fullName}</div><div className="truncate text-xs text-zinc-500">{b.company ?? b.email ?? "—"}</div></div><StatusBadge status={b.contactStatus} /></Link></li>
               ))}
             </ul>
           </>
         )}
-        {status === "CanLoadMore" && <div className="border-t border-stone-100 p-3 text-center"><Button variant="ghost" onClick={() => loadMore(30)}>Load more</Button></div>}
+        {status === "CanLoadMore" && <div className="border-t border-zinc-100 p-3 text-center"><Button variant="ghost" onClick={() => loadMore(30)}>Load more</Button></div>}
       </Card>
 
       <Sheet open={open} onOpenChange={setOpen} title="Add broker" description="Visible to all directors as soon as you save." wide

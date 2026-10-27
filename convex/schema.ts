@@ -11,11 +11,7 @@ import { v } from "convex/values";
  * people editing the same record can never silently overwrite each other.
  */
 
-export const roleValidator = v.union(
-  v.literal("super_admin"),
-  v.literal("director"),
-  v.literal("marketing"),
-);
+export const roleValidator = v.union(v.literal("super_admin"), v.literal("director"));
 
 const meta = {
   createdBy: v.id("users"),
@@ -32,17 +28,6 @@ export const leadStatus = v.union(
   v.literal("follow_up"),
   v.literal("converted"),
   v.literal("closed"),
-);
-
-export const postStatus = v.union(
-  v.literal("draft"),
-  v.literal("pending_approval"),
-  v.literal("approved"),
-  v.literal("scheduled"),
-  v.literal("publishing"),
-  v.literal("published"),
-  v.literal("failed"),
-  v.literal("cancelled"),
 );
 
 export const formFieldType = v.union(
@@ -87,8 +72,6 @@ export default defineSchema({
     jobTitle: v.optional(v.string()),
     lastLoginAt: v.optional(v.number()),
     timezone: v.optional(v.string()),
-    marketingSocialAccess: v.optional(v.boolean()),
-    calendarEnabled: v.optional(v.boolean()),
   })
     .index("email", ["email"])
     .index("by_role", ["role"]),
@@ -260,8 +243,6 @@ export default defineSchema({
     status: v.union(v.literal("draft"), v.literal("active"), v.literal("inactive")),
     propertyId: v.optional(v.id("properties")),
     accentColor: v.optional(v.string()),
-    // When true, leads from this form are visible to Marketing users ("Authorized" leads).
-    shareWithMarketing: v.boolean(),
     submissionCount: v.number(),
     ...meta,
   })
@@ -281,7 +262,6 @@ export default defineSchema({
     assignedTo: v.optional(v.id("users")),
     status: leadStatus,
     notes: v.optional(v.string()),
-    visibleToMarketing: v.boolean(),
     searchText: v.string(),
     submittedAt: v.number(),
     updatedBy: v.optional(v.id("users")),
@@ -302,105 +282,7 @@ export default defineSchema({
     count: v.number(),
   }).index("by_key", ["key"]),
 
-  marketingAccounts: defineTable({
-    platform: v.union(
-      v.literal("facebook"),
-      v.literal("instagram"),
-      v.literal("linkedin"),
-    ),
-    externalId: v.string(),
-    name: v.string(),
-    imageUrl: v.optional(v.string()),
-    status: v.union(
-      v.literal("connected"),
-      v.literal("expired"),
-      v.literal("error"),
-      v.literal("disconnected"),
-    ),
-    accessToken: v.optional(v.string()),
-    refreshToken: v.optional(v.string()),
-    tokenExpiresAt: v.optional(v.number()),
-    connectedBy: v.id("users"),
-    lastError: v.optional(v.string()),
-    // Page/organisation that owns an Instagram account (for display), and when the token was last refreshed.
-    parentName: v.optional(v.string()),
-    connectedAt: v.optional(v.number()),
-  })
-    .index("by_platform", ["platform"])
-    .index("by_platform_external", ["platform", "externalId"]),
-
-  // Short-lived CSRF state for OAuth connect flows (single use, 10-minute expiry).
-  oauthStates: defineTable({
-    state: v.string(),
-    provider: v.union(v.literal("meta"), v.literal("linkedin")),
-    userId: v.id("users"),
-    expiresAt: v.number(),
-  }).index("by_state", ["state"]),
-
-  marketingCampaigns: defineTable({
-    name: v.string(),
-    description: v.optional(v.string()),
-    propertyId: v.optional(v.id("properties")),
-    startDate: v.optional(v.string()),
-    endDate: v.optional(v.string()),
-    ownerId: v.optional(v.id("users")),
-    status: v.union(
-      v.literal("planning"),
-      v.literal("active"),
-      v.literal("paused"),
-      v.literal("completed"),
-      v.literal("archived"),
-    ),
-    objectives: v.optional(v.string()),
-    platforms: v.array(v.string()),
-    notes: v.optional(v.string()),
-    tasks: v.array(v.object({ id: v.string(), title: v.string(), done: v.boolean() })),
-    ...meta,
-  })
-    .index("by_status", ["status"])
-    .index("by_property", ["propertyId"]),
-
-  socialPosts: defineTable({
-    caption: v.string(),
-    hashtags: v.array(v.string()),
-    accountIds: v.array(v.id("marketingAccounts")),
-    mediaStorageIds: v.array(v.id("_storage")),
-    propertyId: v.optional(v.id("properties")),
-    campaignId: v.optional(v.id("marketingCampaigns")),
-    scheduledAt: v.optional(v.number()),
-    timezone: v.string(),
-    status: postStatus,
-    approvedBy: v.optional(v.id("users")),
-    publishedAt: v.optional(v.number()),
-    lastError: v.optional(v.string()),
-    ...meta,
-  })
-    .index("by_status_scheduledAt", ["status", "scheduledAt"])
-    .index("by_scheduledAt", ["scheduledAt"])
-    .index("by_campaign", ["campaignId"]),
-
-  publishingJobs: defineTable({
-    postId: v.id("socialPosts"),
-    accountId: v.id("marketingAccounts"),
-    // Idempotency key: one job per (post, account, post version) — prevents double publishing.
-    idempotencyKey: v.string(),
-    status: v.union(
-      v.literal("queued"),
-      v.literal("running"),
-      v.literal("succeeded"),
-      v.literal("failed"),
-    ),
-    attempts: v.number(),
-    externalPostId: v.optional(v.string()),
-    error: v.optional(v.string()),
-    nextAttemptAt: v.number(),
-    finishedAt: v.optional(v.number()),
-  })
-    .index("by_post", ["postId"])
-    .index("by_idempotencyKey", ["idempotencyKey"])
-    .index("by_status_next", ["status", "nextAttemptAt"]),
-
-  marketingAssets: defineTable({
+  documents: defineTable({
     name: v.string(),
     description: v.optional(v.string()),
     storageId: v.id("_storage"),
@@ -410,33 +292,13 @@ export default defineSchema({
     folder: v.optional(v.string()),
     tags: v.array(v.string()),
     propertyId: v.optional(v.id("properties")),
-    audience: v.union(v.literal("marketing"), v.literal("company")),
-    previousVersionId: v.optional(v.id("marketingAssets")),
+    previousVersionId: v.optional(v.id("documents")),
     searchText: v.string(),
     ...meta,
   })
     .index("by_category", ["category"])
     .index("by_archived", ["archivedAt"])
     .searchIndex("search", { searchField: "searchText", filterFields: ["archivedAt"] }),
-
-  marketingIdeas: defineTable({
-    title: v.string(),
-    description: v.optional(v.string()),
-    propertyId: v.optional(v.id("properties")),
-    platform: v.optional(v.string()),
-    contentType: v.optional(v.string()),
-    priority: v.union(v.literal("low"), v.literal("medium"), v.literal("high")),
-    status: v.union(
-      v.literal("new"),
-      v.literal("under_review"),
-      v.literal("approved"),
-      v.literal("in_production"),
-      v.literal("scheduled"),
-      v.literal("completed"),
-    ),
-    order: v.number(),
-    ...meta,
-  }).index("by_status", ["status"]),
 
   announcements: defineTable({
     subject: v.string(),
@@ -493,8 +355,6 @@ export default defineSchema({
       v.literal("announcement"),
       v.literal("document"),
       v.literal("employee"),
-      v.literal("post_failed"),
-      v.literal("campaign"),
       v.literal("invitation"),
       v.literal("system"),
     ),

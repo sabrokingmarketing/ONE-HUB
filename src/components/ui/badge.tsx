@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 
 const tones = {
-  neutral: "bg-stone-100 text-stone-700",
+  neutral: "bg-zinc-100 text-zinc-700",
   brand: "bg-brand-50 text-brand-700 ring-1 ring-brand-200/60",
   green: "bg-emerald-50 text-emerald-700",
   blue: "bg-sky-50 text-sky-700",

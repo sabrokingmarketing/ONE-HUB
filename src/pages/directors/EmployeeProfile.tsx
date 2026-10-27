@@ -78,9 +78,9 @@ export default function EmployeeProfile() {
           </CardBody>
         </Card>
         <div className="space-y-6">
-          <Card><CardHeader title="Record" /><CardBody className="space-y-1 text-sm text-stone-600">
-            <div>Added by <span className="font-medium text-stone-800">{e.createdByName}</span> · {formatDateTime(e._creationTime)}</div>
-            <div>Last updated by <span className="font-medium text-stone-800">{e.updatedByName}</span> · {formatDateTime(e.updatedAt)}</div>
+          <Card><CardHeader title="Record" /><CardBody className="space-y-1 text-sm text-zinc-600">
+            <div>Added by <span className="font-medium text-zinc-800">{e.createdByName}</span> · {formatDateTime(e._creationTime)}</div>
+            <div>Last updated by <span className="font-medium text-zinc-800">{e.updatedByName}</span> · {formatDateTime(e.updatedAt)}</div>
             {can("employees.write") && <div className="pt-3">{e.archivedAt
               ? <Button variant="secondary" size="sm" loading={archiving} onClick={() => void setArchived({ id: e._id, archived: false })}><RotateCcw /> Restore</Button>
               : <Button variant="danger-ghost" size="sm" onClick={() => setArchiveOpen(true)}><Archive /> Archive</Button>}</div>}

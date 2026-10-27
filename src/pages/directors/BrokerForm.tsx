@@ -63,7 +63,7 @@ export function BrokerForm({ value, onChange, excludeId, id = "broker-form", onS
         <Field label="Region"><Input value={value.region} onChange={set("region")} placeholder="e.g. Johannesburg South" /></Field>
         <Field label="Associated property"><Select value={value.propertyId} onChange={set("propertyId")}><option value="">—</option>{properties?.map((p) => <option key={p._id} value={p._id}>{p.name}</option>)}</Select></Field>
         <Field label="Contact status"><Select value={value.contactStatus} onChange={set("contactStatus")}><option value="active">Active</option><option value="prospect">Prospect</option><option value="inactive">Inactive</option></Select></Field>
-        <Field label="Internal contact" className="sm:col-span-2"><Select value={value.assignedTo} onChange={set("assignedTo")}><option value="">Unassigned</option>{colleagues?.filter((c) => c.role !== "marketing").map((c) => <option key={c._id} value={c._id}>{c.name}</option>)}</Select></Field>
+        <Field label="Internal contact" className="sm:col-span-2"><Select value={value.assignedTo} onChange={set("assignedTo")}><option value="">Unassigned</option>{colleagues?.map((c) => <option key={c._id} value={c._id}>{c.name}</option>)}</Select></Field>
         <Field label="Internal notes" hint="Never included when sharing contact details." className="sm:col-span-2"><Textarea value={value.notes} onChange={set("notes")} /></Field>
       </div>
     </form>

@@ -1,11 +1,10 @@
 import { convexTest } from "convex-test";
 import { describe, expect, test } from "vitest";
 import schema from "./schema";
-import { api, internal } from "./_generated/api";
+import { api } from "./_generated/api";
 import { modules } from "./test.setup";
-import type { Id } from "./_generated/dataModel";
 
-type Role = "super_admin" | "director" | "marketing";
+type Role = "super_admin" | "director";
 
 async function setup() {
   const t = convexTest(schema, modules);
@@ -16,8 +15,7 @@ async function setup() {
   const admin = await mk("Admin", "super_admin");
   const dirA = await mk("DirectorA", "director");
   const dirB = await mk("DirectorB", "director");
-  const mkt = await mk("Marketer", "marketing");
-  return { t, admin, dirA, dirB, mkt };
+  return { t, admin, dirA, dirB };
 }
 
 describe("shared directory + permissions", () => {
@@ -29,12 +27,11 @@ describe("shared directory + permissions", () => {
     expect((await admin.as.query(api.brokers.list, opts)).page).toHaveLength(1);
   });
 
-  test("marketing cannot read brokers or employees (enforced on the backend)", async () => {
-    const { mkt } = await setup();
-    const opts = { paginationOpts: { numItems: 20, cursor: null } };
-    await expect(mkt.as.query(api.brokers.list, opts)).rejects.toThrow(/permission/);
-    await expect(mkt.as.query(api.employees.list, opts)).rejects.toThrow(/permission/);
-    await expect(mkt.as.mutation(api.users.invite, { email: "x@y.co.za", name: "X", role: "director" })).rejects.toThrow(/permission/);
+  test("directors cannot manage users or settings (enforced on the backend)", async () => {
+    const { dirA } = await setup();
+    await expect(dirA.as.mutation(api.users.invite, { email: "x@y.co.za", name: "X", role: "director" })).rejects.toThrow(/permission/);
+    await expect(dirA.as.query(api.users.list, {})).rejects.toThrow(/permission/);
+    await expect(dirA.as.mutation(api.system.setSetting, { key: "leads.retentionDays", value: "1" })).rejects.toThrow(/permission/);
   });
 
   test("unauthenticated callers are rejected", async () => {
@@ -84,9 +81,9 @@ describe("lead forms", () => {
     { id: "f3", type: "consent" as const, label: "I agree", required: true },
   ];
   test("public submission creates a shared lead and notifies directors", async () => {
-    const { t, dirA, dirB, mkt } = await setup();
+    const { t, dirA, dirB } = await setup();
     const formId = await dirA.as.mutation(api.leadForms.create, {
-      data: { title: "Southdale enquiries", fields, thankYouMessage: "Thanks!", notifyUserIds: [], status: "active", shareWithMarketing: false },
+      data: { title: "Southdale enquiries", fields, thankYouMessage: "Thanks!", notifyUserIds: [], status: "active" },
     });
     const form = await dirA.as.query(api.leadForms.get, { id: formId });
     const pub = await t.query(api.leadForms.publicGet, { slug: form!.slug });
@@ -95,33 +92,33 @@ describe("lead forms", () => {
     const leads = await dirB.as.query(api.leads.list, { paginationOpts: { numItems: 10, cursor: null } });
     expect(leads.page[0].name).toBe("Lerato");
     expect(leads.page[0].consent).toBe(true);
-    // Not shared with marketing
-    expect((await mkt.as.query(api.leads.list, { paginationOpts: { numItems: 10, cursor: null } })).page).toHaveLength(0);
     expect(await dirB.as.query(api.notifications.unreadCount, {})).toBe(1);
   });
 
   test("honeypot / too-fast submissions are dropped silently", async () => {
-    const { t, mkt, dirA } = await setup();
-    const formId = await mkt.as.mutation(api.leadForms.create, {
-      data: { title: "Bot test", fields, thankYouMessage: "Thanks", notifyUserIds: [], status: "active", shareWithMarketing: false },
+    const { t, dirB, dirA } = await setup();
+    const formId = await dirB.as.mutation(api.leadForms.create, {
+      data: { title: "Bot test", fields, thankYouMessage: "Thanks", notifyUserIds: [], status: "active" },
     });
-    const form = await mkt.as.query(api.leadForms.get, { id: formId });
-    expect(form!.shareWithMarketing).toBe(true); // marketing-created forms share with marketing
+    const form = await dirB.as.query(api.leadForms.get, { id: formId });
     await t.mutation(api.leadForms.submit, { slug: form!.slug, answers: { f1: "Bot", f2: "bot@x.co.za", f3: true }, elapsedMs: 200 });
     await t.mutation(api.leadForms.submit, { slug: form!.slug, answers: { f1: "Bot", f2: "bot@x.co.za", f3: true }, honeypot: "x", elapsedMs: 9000 });
     expect((await dirA.as.query(api.leads.list, { paginationOpts: { numItems: 10, cursor: null } })).page).toHaveLength(0);
   });
 
-  test("marketing cannot assign leads", async () => {
-    const { t, mkt, dirA } = await setup();
-    const formId = await mkt.as.mutation(api.leadForms.create, {
-      data: { title: "Shared", fields, thankYouMessage: "Thanks", notifyUserIds: [], status: "active", shareWithMarketing: true },
+  test("directors can assign a lead to a colleague, who gets notified", async () => {
+    const { t, dirA, dirB } = await setup();
+    const formId = await dirA.as.mutation(api.leadForms.create, {
+      data: { title: "Shared", fields, thankYouMessage: "Thanks", notifyUserIds: [], status: "active" },
     });
-    const form = await mkt.as.query(api.leadForms.get, { id: formId });
+    const form = await dirA.as.query(api.leadForms.get, { id: formId });
     await t.mutation(api.leadForms.submit, { slug: form!.slug, answers: { f1: "Ann", f2: "ann@x.co.za", f3: true }, elapsedMs: 9000 });
-    const lead = (await mkt.as.query(api.leads.list, { paginationOpts: { numItems: 10, cursor: null } })).page[0];
-    await expect(mkt.as.mutation(api.leads.update, { id: lead._id, expectedVersion: lead.version, assignedTo: dirA.id })).rejects.toThrow(/Only directors/);
-    await mkt.as.mutation(api.leads.update, { id: lead._id, expectedVersion: lead.version, status: "contacted" });
+    const lead = (await dirA.as.query(api.leads.list, { paginationOpts: { numItems: 10, cursor: null } })).page[0];
+    await dirA.as.mutation(api.leads.update, { id: lead._id, expectedVersion: lead.version, assignedTo: dirB.id });
+    const updated = await dirB.as.query(api.leads.get, { id: lead._id });
+    expect(updated!.assignedTo).toBe(dirB.id);
+    const notes = await dirB.as.query(api.notifications.list, {});
+    expect(notes.some((n) => n.title.includes("assigned you a lead"))).toBe(true);
   });
 });
 
@@ -137,26 +134,5 @@ describe("email + announcements", () => {
     expect(jobs).toHaveLength(2);
     await expect(dirA.as.mutation(api.announcements.send, args)).rejects.toThrow(/already sent/);
     await expect(dirA.as.mutation(api.announcements.send, { ...args, subject: "Other", confirmedCount: 5 })).rejects.toThrow(/recipient list changed/);
-  });
-});
-
-describe("social publishing safety", () => {
-  test("due posts fail safely when live publishing is disabled — nothing is posted", async () => {
-    const { t, mkt } = await setup();
-    const accountId = await t.run((ctx) =>
-      ctx.db.insert("marketingAccounts", { platform: "facebook", externalId: "123", name: "Test Page", status: "connected", accessToken: "tok", connectedBy: mkt.id }),
-    );
-    const postId = await mkt.as.mutation(api.socialPosts.save, {
-      intent: "schedule",
-      data: { caption: "Hello", hashtags: [], accountIds: [accountId as Id<"marketingAccounts">], mediaStorageIds: [], scheduledAt: Date.now() + 5 * 60_000 },
-    });
-    await t.run((ctx) => ctx.db.patch(postId, { scheduledAt: Date.now() - 1000 }));
-    await t.mutation(internal.socialPosts.enqueueDue, {});
-    await t.mutation(internal.socialPosts.enqueueDue, {}); // second tick must not create duplicate jobs
-    expect(await t.run((ctx) => ctx.db.query("publishingJobs").collect())).toHaveLength(1);
-    await t.action(internal.socialPosts.runJobs, {});
-    const post = await mkt.as.query(api.socialPosts.get, { id: postId });
-    expect(post!.status).toBe("failed");
-    expect(post!.lastError).toMatch(/switched off/);
   });
 });

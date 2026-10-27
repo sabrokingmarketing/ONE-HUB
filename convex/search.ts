@@ -21,10 +21,9 @@ export const global = query({
       const r = await ctx.db.query("employees").withSearchIndex("search", (s) => s.search("searchText", term).eq("archivedAt", undefined)).take(5);
       push("Employees", r.map((e) => ({ id: e._id, title: `${e.firstName} ${e.lastName}`, subtitle: [e.jobTitle, e.department].filter(Boolean).join(" · "), href: `/directors/employees/${e._id}` })));
     }
-    if (can(user, "leads.read_all") || can(user, "leads.read_authorized")) {
-      const all = can(user, "leads.read_all");
-      const r = await ctx.db.query("leads").withSearchIndex("search", (s) => s.search("searchText", term).eq("archivedAt", undefined)).take(10);
-      push("Leads", r.filter((l) => all || l.visibleToMarketing).slice(0, 5).map((l) => ({ id: l._id, title: l.name, subtitle: l.source, href: `/leads/${l._id}` })));
+    if (can(user, "leads.read")) {
+      const r = await ctx.db.query("leads").withSearchIndex("search", (s) => s.search("searchText", term).eq("archivedAt", undefined)).take(5);
+      push("Leads", r.map((l) => ({ id: l._id, title: l.name, subtitle: l.source, href: `/leads/${l._id}` })));
     }
     if (can(user, "forms.read")) {
       const r = (await ctx.db.query("leadForms").collect()).filter((f) => !f.archivedAt && f.title.toLowerCase().includes(term)).slice(0, 5);
@@ -34,16 +33,11 @@ export const global = query({
       const r = await ctx.db.query("properties").withSearchIndex("search", (s) => s.search("name", term).eq("archivedAt", undefined)).take(5);
       push("Properties", r.map((p) => ({ id: p._id, title: p.name, subtitle: p.location, href: `/properties/${p._id}` })));
     }
-    if (can(user, "library.read")) {
-      const r = await ctx.db.query("marketingAssets").withSearchIndex("search", (s) => s.search("searchText", term).eq("archivedAt", undefined)).take(10);
-      const ok = r.filter((a) => can(user, "library.write") || a.audience === "company").slice(0, 5);
-      push("Documents", ok.map((a) => ({ id: a._id, title: a.name, subtitle: a.category, href: can(user, "library.write") ? `/marketing/library?asset=${a._id}` : `/directors/documents?asset=${a._id}` })));
+    if (can(user, "documents.read")) {
+      const r = await ctx.db.query("documents").withSearchIndex("search", (s) => s.search("searchText", term).eq("archivedAt", undefined)).take(5);
+      push("Documents", r.map((d) => ({ id: d._id, title: d.name, subtitle: d.category, href: `/directors/documents?doc=${d._id}` })));
     }
-    if (can(user, "campaigns.read")) {
-      const r = (await ctx.db.query("marketingCampaigns").collect()).filter((c) => c.name.toLowerCase().includes(term)).slice(0, 5);
-      push("Campaigns", r.map((c) => ({ id: c._id, title: c.name, subtitle: c.status, href: `/marketing/campaigns/${c._id}` })));
-    }
-    if (can(user, "meetings.manage") || can(user, "meetings.view_invited")) {
+    if (can(user, "meetings.manage") || can(user, "calendar.personal")) {
       const upcoming = await ctx.db.query("meetings").withIndex("by_startsAt", (s) => s.gte("startsAt", Date.now() - 30 * 86400_000)).take(300);
       const mine = new Set((await ctx.db.query("meetingParticipants").withIndex("by_user", (s) => s.eq("userId", user._id)).collect()).map((p) => p.meetingId));
       const r = upcoming

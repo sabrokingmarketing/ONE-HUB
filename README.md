@@ -2,7 +2,7 @@
 
 **One platform. Every connection. Complete control.**
 
-The internal operating platform for ONE Property Holdings: an Admin portal, a Directors portal and a Marketing portal in one app, all reading and writing **one shared, real-time Convex database**.
+The internal operating platform for ONE Property Holdings: an Admin portal and a Directors portal in one app, both reading and writing **one shared, real-time Convex database**.
 
 | | |
 |---|---|
@@ -31,7 +31,7 @@ Then open `http://localhost:5173/accept-invite?bootstrap=1` and create the first
 |---|---|
 | `npm run dev` | Frontend + Convex dev deployment |
 | `npm run typecheck` | App, Convex functions and service worker |
-| `npm test` | Backend tests (convex-test): permissions, sync, conflicts, imports, forms, email, publishing safety |
+| `npm test` | Backend tests (convex-test): permissions, sync, conflicts, imports, forms, email |
 | `npm run build` | Production build into `dist/` |
 | `npm run codegen:offline` | Regenerate `convex/_generated` without network access |
 | `npm run ui-harness` | **Dev-only** visual QA with fictional sample data (never deployed) |
@@ -41,6 +41,6 @@ Then open `http://localhost:5173/accept-invite?bootstrap=1` and create the first
 - [`docs/STATUS.md`](docs/STATUS.md): what's built, what's next, blockers
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md): architecture, data model, sitemap, permissions, background jobs
 - [`docs/SETUP.md`](docs/SETUP.md): environments, deployment, onboarding
-- [`docs/INTEGRATIONS.md`](docs/INTEGRATIONS.md): Google, Microsoft, Meta, LinkedIn, Resend, Web Push. What needs external approval.
+- [`docs/INTEGRATIONS.md`](docs/INTEGRATIONS.md): Resend, calendars, Web Push. What needs external approval.
 - [`docs/FREE_TIER.md`](docs/FREE_TIER.md): provider limits and how ONE HUB stays within them
 - [`docs/SECURITY_POPIA.md`](docs/SECURITY_POPIA.md): security model and POPIA obligations

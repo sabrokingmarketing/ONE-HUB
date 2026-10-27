@@ -43,7 +43,7 @@ export default function LeadsPage() {
 
   return (
     <>
-      <PageHeader eyebrow="Leads & forms" title={can("leads.read_all") ? "All leads" : "Authorized leads"} description="Every submission from every form lands here, shared with authorised colleagues in real time."
+      <PageHeader eyebrow="Leads & forms" title="Leads" description="Every submission from every form lands here, shared with authorised colleagues in real time."
         actions={<>
           <Button variant="secondary" asChild><Link to="/forms"><ClipboardList /> Lead forms</Link></Button>
           {can("leads.write") && <Button variant="secondary" onClick={() => void exportCsv()}><Download /> Export</Button>}
@@ -62,22 +62,22 @@ export default function LeadsPage() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[720px] text-sm">
-              <thead className="bg-stone-50/80 text-left text-xs font-medium text-stone-500"><tr><th className="px-5 py-3">Lead</th><th className="px-5 py-3">Source</th><th className="px-5 py-3">Assigned</th><th className="px-5 py-3">Status</th><th className="px-5 py-3">Submitted</th></tr></thead>
-              <tbody className="divide-y divide-stone-100">
+              <thead className="border-b border-zinc-100 text-left text-[11px] font-bold tracking-wider text-zinc-400 uppercase"><tr><th className="px-5 py-3">Lead</th><th className="px-5 py-3">Source</th><th className="px-5 py-3">Assigned</th><th className="px-5 py-3">Status</th><th className="px-5 py-3">Submitted</th></tr></thead>
+              <tbody className="divide-y divide-zinc-100">
                 {results.map((l) => (
-                  <tr key={l._id} className="cursor-pointer hover:bg-stone-50/60" onClick={() => navigate(`/leads/${l._id}`)}>
-                    <td className="px-5 py-3"><div className="flex items-center gap-3"><Avatar name={l.name} size="sm" /><div><div className="font-medium text-stone-900">{l.name}</div><div className="text-xs text-stone-500">{l.email ?? l.phone ?? "—"}</div></div></div></td>
-                    <td className="px-5 py-3 text-stone-600">{l.source}</td>
-                    <td className="px-5 py-3 text-stone-600">{l.assignedToName ?? <span className="text-stone-400">Unassigned</span>}</td>
+                  <tr key={l._id} className="cursor-pointer hover:bg-zinc-50/60" onClick={() => navigate(`/leads/${l._id}`)}>
+                    <td className="px-5 py-3"><div className="flex items-center gap-3"><Avatar name={l.name} size="sm" /><div><div className="font-medium text-zinc-900">{l.name}</div><div className="text-xs text-zinc-500">{l.email ?? l.phone ?? "—"}</div></div></div></td>
+                    <td className="px-5 py-3 text-zinc-600">{l.source}</td>
+                    <td className="px-5 py-3 text-zinc-600">{l.assignedToName ?? <span className="text-zinc-400">Unassigned</span>}</td>
                     <td className="px-5 py-3"><StatusBadge status={l.status} /></td>
-                    <td className="px-5 py-3 text-stone-500">{timeAgo(l.submittedAt)}</td>
+                    <td className="px-5 py-3 text-zinc-500">{timeAgo(l.submittedAt)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         )}
-        {loadStatus === "CanLoadMore" && <div className="border-t border-stone-100 p-3 text-center"><Button variant="ghost" onClick={() => loadMore(30)}>Load more</Button></div>}
+        {loadStatus === "CanLoadMore" && <div className="border-t border-zinc-100 p-3 text-center"><Button variant="ghost" onClick={() => loadMore(30)}>Load more</Button></div>}
       </Card>
       <AddLeadSheet open={addOpen} onOpenChange={setAddOpen} />
     </>

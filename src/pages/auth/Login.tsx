@@ -35,7 +35,7 @@ export default function Login() {
       </form>
       <div className="mt-6 flex items-center justify-between text-sm">
         <Link to="/reset-password" className="font-medium text-brand-600 hover:text-brand-700">Forgot password?</Link>
-        <span className="text-stone-400">Invite only</span>
+        <span className="text-zinc-400">Invite only</span>
       </div>
     </AuthLayout>
   );

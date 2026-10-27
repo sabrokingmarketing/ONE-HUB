@@ -7,11 +7,11 @@ import type { Id } from "../../../convex/_generated/dataModel";
 import { PageHeader, Skeleton, EmptyState, Tabs } from "@/components/ui/misc";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Field, Input, Select, Textarea, Switch, Checkbox } from "@/components/ui/input";
+import { Field, Input, Select, Textarea, Checkbox } from "@/components/ui/input";
 import { Menu, MenuContent, MenuItem, MenuTrigger } from "@/components/ui/menu";
 import { ChangedBanner } from "@/components/ChangedBanner";
 import { useAction } from "@/lib/hooks";
-import { useCan, useMe } from "@/lib/session";
+import { useCan } from "@/lib/session";
 import { FormRenderer, type Answers, type FormField } from "./FormRenderer";
 import { ShareFormDialog } from "./ShareForm";
 
@@ -26,11 +26,11 @@ const newId = () => Math.random().toString(36).slice(2, 9);
 
 type Draft = {
   title: string; description: string; fields: FormField[]; thankYouMessage: string; successUrl: string; notifyUserIds: Id<"users">[];
-  status: "draft" | "active" | "inactive"; propertyId: string; accentColor: string; shareWithMarketing: boolean;
+  status: "draft" | "active" | "inactive"; propertyId: string; accentColor: string;
 };
 
 const DEFAULT: Draft = {
-  title: "", description: "", thankYouMessage: "Thank you — a member of our team will be in touch shortly.", successUrl: "", notifyUserIds: [], status: "draft", propertyId: "", accentColor: "#F26B1D", shareWithMarketing: false,
+  title: "", description: "", thankYouMessage: "Thank you — a member of our team will be in touch shortly.", successUrl: "", notifyUserIds: [], status: "draft", propertyId: "", accentColor: "#F26B1D",
   fields: [
     { id: newId(), type: "first_name", label: "First name", required: true },
     { id: newId(), type: "last_name", label: "Last name", required: true },
@@ -44,11 +44,10 @@ export default function FormBuilder() {
   const { id } = useParams();
   const navigate = useNavigate();
   const can = useCan();
-  const me = useMe();
   const existing = useQuery(api.leadForms.get, id ? { id: id as Id<"leadForms"> } : "skip");
   const properties = useQuery(api.properties.options);
   const colleagues = useQuery(api.users.colleagues);
-  const [draft, setDraft] = useState<Draft | null>(id ? null : { ...DEFAULT, shareWithMarketing: me.role === "marketing" });
+  const [draft, setDraft] = useState<Draft | null>(id ? null : { ...DEFAULT});
   const [version, setVersion] = useState(0);
   const [tab, setTab] = useState<"build" | "settings">("build");
   const [preview, setPreview] = useState<Answers>({});
@@ -61,7 +60,7 @@ export default function FormBuilder() {
     if (existing && !draft) {
       setDraft({
         title: existing.title, description: existing.description ?? "", fields: existing.fields, thankYouMessage: existing.thankYouMessage, successUrl: existing.successUrl ?? "",
-        notifyUserIds: existing.notifyUserIds, status: existing.status, propertyId: existing.propertyId ?? "", accentColor: existing.accentColor ?? "#F26B1D", shareWithMarketing: existing.shareWithMarketing,
+        notifyUserIds: existing.notifyUserIds, status: existing.status, propertyId: existing.propertyId ?? "", accentColor: existing.accentColor ?? "#F26B1D",
       });
       setVersion(existing.version);
     }
@@ -87,7 +86,7 @@ export default function FormBuilder() {
   const payload = () => ({
     title: draft.title, description: draft.description || undefined, fields: draft.fields.map((f) => ({ ...f, options: hasOptions(f.type) ? f.options?.map((o) => o.trim()).filter(Boolean) : undefined })),
     thankYouMessage: draft.thankYouMessage, successUrl: draft.successUrl || undefined, notifyUserIds: draft.notifyUserIds, status: draft.status,
-    propertyId: (draft.propertyId || undefined) as Id<"properties"> | undefined, accentColor: draft.accentColor, shareWithMarketing: draft.shareWithMarketing,
+    propertyId: (draft.propertyId || undefined) as Id<"properties"> | undefined, accentColor: draft.accentColor,
   });
   const save = async () => {
     if (id) {
@@ -117,11 +116,11 @@ export default function FormBuilder() {
                 <Field label="Description"><Textarea disabled={readOnly} className="min-h-16" value={draft.description} onChange={(e) => setDraft({ ...draft, description: e.target.value })} /></Field>
                 <div className="space-y-2">
                   {draft.fields.map((f, i) => (
-                    <div key={f.id} className="rounded-xl bg-stone-50 p-3 ring-1 ring-stone-200/70">
+                    <div key={f.id} className="rounded-xl bg-zinc-50 p-3 ring-1 ring-zinc-200/70">
                       <div className="flex items-center gap-2">
-                        <GripVertical className="size-4 shrink-0 text-stone-300" />
+                        <GripVertical className="size-4 shrink-0 text-zinc-300" />
                         <Input disabled={readOnly} className="h-9 flex-1" value={f.label} onChange={(e) => setField(i, { label: e.target.value })} aria-label="Field label" />
-                        <span className="hidden shrink-0 rounded-md bg-white px-2 py-1 text-[11px] text-stone-500 ring-1 ring-stone-200 sm:inline">{FIELD_TYPES.find((t) => t.type === f.type)?.label}</span>
+                        <span className="hidden shrink-0 rounded-md bg-white px-2 py-1 text-[11px] text-zinc-500 ring-1 ring-zinc-200 sm:inline">{FIELD_TYPES.find((t) => t.type === f.type)?.label}</span>
                       </div>
                       {!readOnly && (
                         <div className="mt-2 flex flex-wrap items-center gap-3 pl-6">
@@ -153,22 +152,18 @@ export default function FormBuilder() {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <Field label="Status"><Select disabled={readOnly} value={draft.status} onChange={(e) => setDraft({ ...draft, status: e.target.value as Draft["status"] })}><option value="draft">Draft</option><option value="active">Active — accepting submissions</option><option value="inactive">Inactive</option></Select></Field>
                   <Field label="Property"><Select disabled={readOnly} value={draft.propertyId} onChange={(e) => setDraft({ ...draft, propertyId: e.target.value })}><option value="">Portfolio-wide</option>{properties?.map((p) => <option key={p._id} value={p._id}>{p.name}</option>)}</Select></Field>
-                  <Field label="Accent colour"><div className="flex gap-2"><input disabled={readOnly} type="color" value={draft.accentColor} onChange={(e) => setDraft({ ...draft, accentColor: e.target.value })} className="h-10 w-12 rounded-lg ring-1 ring-stone-200" /><Input disabled={readOnly} value={draft.accentColor} onChange={(e) => setDraft({ ...draft, accentColor: e.target.value })} /></div></Field>
+                  <Field label="Accent colour"><div className="flex gap-2"><input disabled={readOnly} type="color" value={draft.accentColor} onChange={(e) => setDraft({ ...draft, accentColor: e.target.value })} className="h-10 w-12 rounded-lg ring-1 ring-zinc-200" /><Input disabled={readOnly} value={draft.accentColor} onChange={(e) => setDraft({ ...draft, accentColor: e.target.value })} /></div></Field>
                   <Field label="Success page (optional)" hint="Redirect here after submission."><Input disabled={readOnly} value={draft.successUrl} onChange={(e) => setDraft({ ...draft, successUrl: e.target.value })} placeholder="https://" /></Field>
                 </div>
                 <Field label="Thank-you message"><Textarea disabled={readOnly} className="min-h-16" value={draft.thankYouMessage} onChange={(e) => setDraft({ ...draft, thankYouMessage: e.target.value })} /></Field>
                 <div>
-                  <div className="mb-1.5 text-[13px] font-medium text-stone-700">Email notifications</div>
-                  <p className="mb-2 text-xs text-stone-500">Selected colleagues get an email per submission. Everyone with lead access gets an in-app notification if nobody is selected.</p>
-                  <div className="max-h-48 space-y-1 overflow-y-auto rounded-xl bg-stone-50 p-2">
-                    {colleagues?.filter((c) => c.role !== "marketing" || draft.shareWithMarketing).map((c) => (
+                  <div className="mb-1.5 text-[13px] font-medium text-zinc-700">Email notifications</div>
+                  <p className="mb-2 text-xs text-zinc-500">Selected colleagues get an email per submission. Everyone with lead access gets an in-app notification if nobody is selected.</p>
+                  <div className="max-h-48 space-y-1 overflow-y-auto rounded-xl bg-zinc-50 p-2">
+                    {colleagues?.map((c) => (
                       <Checkbox key={c._id} className="w-full rounded-lg px-2 py-1.5" checked={draft.notifyUserIds.includes(c._id)} onChange={(v) => setDraft({ ...draft, notifyUserIds: v ? [...draft.notifyUserIds, c._id] : draft.notifyUserIds.filter((x) => x !== c._id) })} label={c.name} />
                     ))}
                   </div>
-                </div>
-                <div className="flex items-center justify-between gap-4 rounded-xl bg-stone-50 p-3">
-                  <div className="text-sm"><div className="font-medium">Share leads with marketing</div><div className="text-xs text-stone-500">{me.role === "marketing" ? "Always on for forms created by marketing." : "Marketing users will see submissions from this form."}</div></div>
-                  <Switch disabled={readOnly || me.role === "marketing"} checked={draft.shareWithMarketing} onChange={(v) => setDraft({ ...draft, shareWithMarketing: v })} label="Share with marketing" />
                 </div>
               </CardBody>
             </Card>
@@ -176,7 +171,7 @@ export default function FormBuilder() {
         </div>
 
         <div className="xl:sticky xl:top-24 xl:self-start">
-          <div className="mb-2 text-xs font-semibold tracking-wider text-stone-400 uppercase">Live preview</div>
+          <div className="mb-2 text-xs font-semibold tracking-wider text-zinc-400 uppercase">Live preview</div>
           <Card className="overflow-hidden">
             <div className="h-1.5" style={{ background: draft.accentColor }} />
             <CardHeader title={draft.title || "Untitled form"} description={draft.description} />

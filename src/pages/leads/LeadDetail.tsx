@@ -8,7 +8,7 @@ import { PageHeader, Avatar, DefinitionList, Skeleton, EmptyState } from "@/comp
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Field, Select, Textarea, Switch, Input } from "@/components/ui/input";
+import { Field, Select, Textarea, Input } from "@/components/ui/input";
 import { ConfirmDialog } from "@/components/ui/dialog";
 import { HistoryList } from "@/components/HistoryList";
 import { useAction } from "@/lib/hooks";
@@ -77,15 +77,9 @@ export default function LeadDetail() {
                 <Field label="Assigned director" hint="Assigning never hides the lead from other directors.">
                   <Select value={lead.assignedTo ?? ""} onChange={(e) => void update({ id: lead._id, expectedVersion: v, assignedTo: (e.target.value || null) as Id<"users"> | null })}>
                     <option value="">Unassigned</option>
-                    {colleagues?.filter((c) => c.role !== "marketing").map((c) => <option key={c._id} value={c._id}>{c.name}</option>)}
+                    {colleagues?.map((c) => <option key={c._id} value={c._id}>{c.name}</option>)}
                   </Select>
                 </Field>
-              )}
-              {can("leads.write") && (
-                <div className="flex items-center justify-between gap-4 rounded-xl bg-stone-50 p-3">
-                  <div className="text-sm"><div className="font-medium">Visible to marketing</div><div className="text-xs text-stone-500">Share this lead with the marketing team.</div></div>
-                  <Switch checked={lead.visibleToMarketing} onChange={(val) => void update({ id: lead._id, expectedVersion: v, visibleToMarketing: val })} label="Visible to marketing" />
-                </div>
               )}
             </CardBody>
           </Card>
@@ -93,7 +87,7 @@ export default function LeadDetail() {
           {can("leads.write") && (
             <Card><CardHeader title="Data management" description="POPIA: archive on request, or permanently delete (Super Admin)." /><CardBody className="flex flex-wrap gap-2">
               <Button variant="secondary" size="sm" onClick={() => setArchiveOpen(true)}><Archive /> Archive</Button>
-              {can("users.manage") && <Button variant="danger-ghost" size="sm" onClick={() => setEraseOpen(true)}><Trash2 /> Permanently delete</Button>}
+              {can("leads.erase") && <Button variant="danger-ghost" size="sm" onClick={() => setEraseOpen(true)}><Trash2 /> Permanently delete</Button>}
             </CardBody></Card>
           )}
         </div>

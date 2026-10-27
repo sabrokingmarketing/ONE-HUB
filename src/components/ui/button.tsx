@@ -11,8 +11,8 @@ const buttonVariants = cva(
       variant: {
         primary: "bg-brand-500 text-white shadow-sm shadow-brand-500/20 hover:bg-brand-600",
         dark: "bg-ink text-white hover:bg-ink-soft",
-        secondary: "bg-white text-stone-800 ring-1 ring-stone-200 hover:bg-stone-50 hover:ring-stone-300 shadow-xs",
-        ghost: "text-stone-600 hover:bg-stone-100 hover:text-stone-900",
+        secondary: "bg-white text-zinc-800 ring-1 ring-zinc-200 hover:bg-zinc-50 hover:ring-zinc-300 shadow-xs",
+        ghost: "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900",
         danger: "bg-red-600 text-white hover:bg-red-700",
         "danger-ghost": "text-red-600 hover:bg-red-50",
         link: "text-brand-600 hover:text-brand-700 underline-offset-4 hover:underline px-0 h-auto",

@@ -18,7 +18,6 @@ const input = v.object({
   status: v.union(v.literal("draft"), v.literal("active"), v.literal("inactive")),
   propertyId: v.optional(v.id("properties")),
   accentColor: v.optional(v.string()),
-  shareWithMarketing: v.boolean(),
 });
 
 function validate(i: typeof input.type) {
@@ -81,8 +80,6 @@ export const create = mutation({
     const id = await ctx.db.insert("leadForms", {
       ...d,
       slug,
-      // Marketing-created forms always share their leads with Marketing.
-      shareWithMarketing: user.role === "marketing" ? true : d.shareWithMarketing,
       submissionCount: 0,
       createdBy: user._id,
       updatedBy: user._id,
@@ -104,7 +101,6 @@ export const update = mutation({
     const d = validate(data);
     await ctx.db.patch(id, {
       ...d,
-      shareWithMarketing: user.role === "marketing" ? f.shareWithMarketing || d.shareWithMarketing : d.shareWithMarketing,
       updatedBy: user._id,
       updatedAt: Date.now(),
       version: f.version + 1,
@@ -204,7 +200,6 @@ export const submit = mutation({
       consent,
       propertyId: form.propertyId,
       status: "new",
-      visibleToMarketing: form.shareWithMarketing,
       searchText: searchText(name, by.email, by.phone, by.company, form.title),
       submittedAt: now,
       updatedAt: now,

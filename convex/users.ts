@@ -86,8 +86,6 @@ export const list = query({
           status: u.status ?? "active",
           lastLoginAt: u.lastLoginAt,
           createdAt: u._creationTime,
-          marketingSocialAccess: !!u.marketingSocialAccess,
-          calendarEnabled: !!u.calendarEnabled,
         })),
       invitations: invitations.map(({ token: _t, ...i }) => ({ ...i, expired: i.expiresAt < Date.now() })),
     };
@@ -204,8 +202,6 @@ export const updateAccess = mutation({
   args: {
     userId: v.id("users"),
     role: v.optional(roleValidator),
-    marketingSocialAccess: v.optional(v.boolean()),
-    calendarEnabled: v.optional(v.boolean()),
   },
   handler: async (ctx, a) => {
     const admin = await requirePermission(ctx, "users.manage");
@@ -214,8 +210,6 @@ export const updateAccess = mutation({
     if (a.role && a.role !== user.role && user.role === "super_admin") await assertNotLastAdmin(ctx, user._id);
     const patch: Record<string, unknown> = {};
     if (a.role) patch.role = a.role;
-    if (a.marketingSocialAccess !== undefined) patch.marketingSocialAccess = a.marketingSocialAccess;
-    if (a.calendarEnabled !== undefined) patch.calendarEnabled = a.calendarEnabled;
     await ctx.db.patch(user._id, patch);
     await audit(ctx, admin._id, "user.access", "users", user._id, `Updated access for ${user.email}: ${JSON.stringify(patch)}`);
   },

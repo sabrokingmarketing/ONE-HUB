@@ -39,23 +39,23 @@ export default function PublicForm() {
 
   const shell = (children: React.ReactNode) => (
     <div className={embed ? "bg-transparent p-2" : "min-h-dvh bg-canvas px-4 py-10 sm:py-16"} style={style}>
-      <div className="mx-auto w-full max-w-xl overflow-hidden rounded-2xl bg-white shadow-card ring-1 ring-stone-200/70">
+      <div className="mx-auto w-full max-w-xl overflow-hidden rounded-2xl bg-white shadow-card">
         <div className="h-1.5" style={{ background: accent }} />
         {children}
       </div>
-      {!embed && <p className="mt-6 text-center text-xs text-stone-400">ONE Property Holdings · Your information is handled in line with POPIA.</p>}
+      {!embed && <p className="mt-6 text-center text-xs text-zinc-400">ONE Property Holdings · Your information is handled in line with POPIA.</p>}
     </div>
   );
 
-  if (form === undefined) return shell(<div className="h-80 animate-pulse bg-stone-50" />);
-  if (form === null) return shell(<div className="p-10 text-center"><h1 className="text-lg font-semibold">Form not found</h1><p className="mt-1 text-sm text-stone-500">This link may be incorrect or the form was removed.</p></div>);
-  if (!form.active) return shell(<div className="p-10 text-center"><Lock className="mx-auto mb-3 size-6 text-stone-300" /><h1 className="text-lg font-semibold">{form.title}</h1><p className="mt-1 text-sm text-stone-500">This form isn't accepting submissions right now.</p></div>);
-  if (state === "done") return shell(<div className="p-10 text-center"><CheckCircle2 className="mx-auto mb-3 size-10" style={{ color: accent }} /><h1 className="text-lg font-semibold">Submitted</h1><p className="mt-2 text-sm whitespace-pre-wrap text-stone-600">{thanks}</p></div>);
+  if (form === undefined) return shell(<div className="h-80 animate-pulse bg-zinc-50" />);
+  if (form === null) return shell(<div className="p-10 text-center"><h1 className="text-lg font-semibold">Form not found</h1><p className="mt-1 text-sm text-zinc-500">This link may be incorrect or the form was removed.</p></div>);
+  if (!form.active) return shell(<div className="p-10 text-center"><Lock className="mx-auto mb-3 size-6 text-zinc-300" /><h1 className="text-lg font-semibold">{form.title}</h1><p className="mt-1 text-sm text-zinc-500">This form isn't accepting submissions right now.</p></div>);
+  if (state === "done") return shell(<div className="p-10 text-center"><CheckCircle2 className="mx-auto mb-3 size-10" style={{ color: accent }} /><h1 className="text-lg font-semibold">Submitted</h1><p className="mt-2 text-sm whitespace-pre-wrap text-zinc-600">{thanks}</p></div>);
 
   return shell(
     <form onSubmit={onSubmit} className="p-6 sm:p-8" noValidate={false}>
       <h1 className="text-xl font-semibold tracking-tight">{form.title}</h1>
-      {form.description && <p className="mt-1.5 text-sm whitespace-pre-wrap text-stone-500">{form.description}</p>}
+      {form.description && <p className="mt-1.5 text-sm whitespace-pre-wrap text-zinc-500">{form.description}</p>}
       <div className="mt-6"><FormRenderer fields={form.fields} answers={answers} onChange={setAnswers} accent={accent} disabled={state === "sending"} /></div>
       {/* Honeypot: hidden from humans, tempting to bots. */}
       <div aria-hidden className="absolute -left-[9999px] h-0 overflow-hidden"><label>Website<input tabIndex={-1} autoComplete="off" value={honeypot} onChange={(e) => setHoneypot(e.target.value)} /></label></div>

@@ -5,7 +5,7 @@ import { requirePermission } from "./lib/auth";
 import { audit } from "./lib/audit";
 import { emailMode } from "./lib/email";
 
-const SETTING_KEYS = ["social.requireApproval", "social.publishingEnabled", "leads.retentionDays", "company.timezone"] as const;
+const SETTING_KEYS = ["leads.retentionDays", "company.timezone"] as const;
 
 export const auditLogs = query({
   args: { paginationOpts: paginationOptsValidator, entity: v.optional(v.string()) },
@@ -28,7 +28,7 @@ export const settings = query({
   handler: async (ctx) => {
     await requirePermission(ctx, "settings.manage");
     const rows = await ctx.db.query("integrationSettings").collect();
-    const map: Record<string, string> = { "social.requireApproval": "false", "social.publishingEnabled": "false", "leads.retentionDays": "730", "company.timezone": "Africa/Johannesburg" };
+    const map: Record<string, string> = { "leads.retentionDays": "730", "company.timezone": "Africa/Johannesburg" };
     for (const r of rows) map[r.key] = r.value;
     return map;
   },
@@ -55,11 +55,9 @@ export const health = query({
   args: {},
   handler: async (ctx) => {
     await requirePermission(ctx, "settings.manage");
-    const [emails, calendars, accounts, failedPubs, storage] = await Promise.all([
+    const [emails, calendars, storage] = await Promise.all([
       ctx.db.query("emailJobs").order("desc").take(200),
       ctx.db.query("calendarConnections").collect(),
-      ctx.db.query("marketingAccounts").collect(),
-      ctx.db.query("publishingJobs").withIndex("by_status_next", (q) => q.eq("status", "failed")).take(100),
       ctx.db.system.query("_storage").collect(),
     ]);
     const lastSent = emails.find((e) => e.status === "sent");
@@ -75,12 +73,8 @@ export const health = query({
       },
       google: { status: env("AUTH_GOOGLE_CALENDAR_ID") ? ("configured_unverified" as const) : ("not_configured" as const), connections: calendars.filter((c) => c.provider === "google").length },
       microsoft: { status: env("AUTH_MICROSOFT_CALENDAR_ID") ? ("configured_unverified" as const) : ("not_configured" as const), connections: calendars.filter((c) => c.provider === "microsoft").length },
-      social: accounts.map((a) => ({ name: a.name, platform: a.platform, status: a.status, lastError: a.lastError })),
-      meta: env("META_APP_ID") && env("META_APP_SECRET") ? ("configured_unverified" as const) : ("not_configured" as const),
-      linkedin: env("LINKEDIN_CLIENT_ID") && env("LINKEDIN_CLIENT_SECRET") ? ("configured_unverified" as const) : ("not_configured" as const),
       cloudflare: { status: "external" as const, detail: "Frontend hosting is monitored in the Cloudflare dashboard." },
       storage: { files: storage.length, bytes: storage.reduce((s, f) => s + f.size, 0) },
-      failedPublishingJobs: failedPubs.length,
     };
   },
 });

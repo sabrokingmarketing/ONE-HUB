@@ -46,16 +46,16 @@ export default function AcceptInvite() {
   if (!token && !bootstrap) {
     return (
       <AuthLayout title="Invitation required" subtitle="ONE HUB accounts are created by invitation only.">
-        <p className="text-sm text-stone-600">Open the link in your invitation email, or ask an administrator to invite you.</p>
+        <p className="text-sm text-zinc-600">Open the link in your invitation email, or ask an administrator to invite you.</p>
         <Link to="/login" className="mt-6 inline-block text-sm font-medium text-brand-600">Back to sign in</Link>
       </AuthLayout>
     );
   }
-  if (token && invite === undefined) return <AuthLayout title="Checking your invitation…"><div className="h-24 animate-pulse rounded-xl bg-stone-200/60" /></AuthLayout>;
+  if (token && invite === undefined) return <AuthLayout title="Checking your invitation…"><div className="h-24 animate-pulse rounded-xl bg-zinc-200/60" /></AuthLayout>;
   if (token && (!invite || !invite.valid)) {
     return (
       <AuthLayout title="This invitation can't be used" subtitle="It may have expired, been revoked or already been accepted.">
-        <p className="text-sm text-stone-600">Ask a ONE HUB administrator to resend your invitation.</p>
+        <p className="text-sm text-zinc-600">Ask a ONE HUB administrator to resend your invitation.</p>
         <Link to="/login" className="mt-6 inline-block text-sm font-medium text-brand-600">Back to sign in</Link>
       </AuthLayout>
     );

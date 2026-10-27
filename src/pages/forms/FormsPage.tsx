@@ -18,22 +18,21 @@ export default function FormsPage() {
     <>
       <PageHeader eyebrow="Leads & forms" title="Lead forms" description="Shared forms — any authorised colleague can open, share and track them." actions={can("forms.write") && <Button asChild><Link to="/forms/new"><Plus /> Create form</Link></Button>} />
       {forms === undefined ? <Skeleton className="h-64 rounded-2xl" /> : forms.length === 0 ? (
-        <div className="rounded-2xl bg-white ring-1 ring-stone-200/70"><EmptyState icon={ClipboardList} title="No lead forms yet" description="Build a branded form in minutes and share it by link, QR code, WhatsApp or embed." action={can("forms.write") ? <Button asChild><Link to="/forms/new"><Plus /> Create form</Link></Button> : undefined} /></div>
+        <div className="rounded-2xl bg-white shadow-card"><EmptyState icon={ClipboardList} title="No lead forms yet" description="Build a branded form in minutes and share it by link, QR code, WhatsApp or embed." action={can("forms.write") ? <Button asChild><Link to="/forms/new"><Plus /> Create form</Link></Button> : undefined} /></div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {forms.map((f) => (
-            <div key={f._id} className="flex flex-col rounded-2xl bg-white p-5 shadow-card ring-1 ring-stone-200/70">
+            <div key={f._id} className="flex flex-col rounded-2xl bg-white p-5 shadow-card">
               <div className="flex items-start justify-between gap-3">
                 <span className="grid size-10 place-items-center rounded-xl text-white" style={{ background: f.accentColor ?? "var(--color-brand-500)" }}><ClipboardList className="size-5" /></span>
                 <StatusBadge status={f.status} />
               </div>
-              <h3 className="mt-4 font-semibold text-stone-900">{f.title}</h3>
-              <p className="mt-1 line-clamp-2 text-sm text-stone-500">{f.description ?? `${f.fields.length} fields`}</p>
+              <h3 className="mt-4 font-semibold text-zinc-900">{f.title}</h3>
+              <p className="mt-1 line-clamp-2 text-sm text-zinc-500">{f.description ?? `${f.fields.length} fields`}</p>
               <div className="mt-3 flex flex-wrap gap-1.5 text-xs">
                 {f.propertyName && <Badge>{f.propertyName}</Badge>}
-                {f.shareWithMarketing && <Badge tone="blue">Shared with marketing</Badge>}
               </div>
-              <div className="mt-auto flex items-center justify-between border-t border-stone-100 pt-4 text-xs text-stone-500">
+              <div className="mt-auto flex items-center justify-between border-t border-zinc-100 pt-4 text-xs text-zinc-500">
                 <span className="flex items-center gap-1.5"><Inbox className="size-3.5" /> {f.submissionCount} submissions · by {f.createdByName} · {timeAgo(f._creationTime)}</span>
               </div>
               <div className="mt-3 flex gap-2">

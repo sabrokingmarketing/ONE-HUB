@@ -162,10 +162,10 @@ export default function ImportPage({ entity }: { entity: Entity }) {
         <Card>
           <CardHeader title="1. Choose a file" />
           <CardBody>
-            <label className="flex cursor-pointer flex-col items-center gap-3 rounded-2xl border-2 border-dashed border-stone-200 p-8 text-center transition hover:border-brand-300 hover:bg-brand-50/30">
+            <label className="flex cursor-pointer flex-col items-center gap-3 rounded-2xl border-2 border-dashed border-zinc-200 p-8 text-center transition hover:border-brand-300 hover:bg-brand-50/30">
               <span className="grid size-12 place-items-center rounded-2xl bg-brand-50 text-brand-600"><FileSpreadsheet className="size-5" /></span>
               <span className="text-sm font-medium">{fileName || "Click to choose a CSV or .xlsx file"}</span>
-              {rows.length > 0 && <span className="text-xs text-stone-500">{rows.length} rows · {headers.length} columns</span>}
+              {rows.length > 0 && <span className="text-xs text-zinc-500">{rows.length} rows · {headers.length} columns</span>}
               <input type="file" accept=".csv,.xlsx,text/csv" className="hidden" onChange={(e) => e.target.files?.[0] && void load(e.target.files[0])} />
             </label>
           </CardBody>
@@ -177,7 +177,7 @@ export default function ImportPage({ entity }: { entity: Entity }) {
             <CardBody className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {fields.map((f) => (
                 <div key={f.key} className="flex flex-col gap-1.5">
-                  <span className="text-[13px] font-medium text-stone-700">{f.label}{f.required && <span className="text-brand-600"> *</span>}</span>
+                  <span className="text-[13px] font-medium text-zinc-700">{f.label}{f.required && <span className="text-brand-600"> *</span>}</span>
                   <Select value={mapping[f.key] ?? ""} onChange={(e) => { setAnalysis(null); setMapping((m) => { const n = { ...m }; if (e.target.value === "") delete n[f.key]; else n[f.key] = Number(e.target.value); return n; }); }}>
                     <option value="">— Don't import —</option>
                     {headers.map((h, i) => <option key={i} value={i}>{h || `Column ${i + 1}`}</option>)}
@@ -185,8 +185,8 @@ export default function ImportPage({ entity }: { entity: Entity }) {
                 </div>
               ))}
             </CardBody>
-            <div className="flex items-center justify-between gap-4 border-t border-stone-100 px-5 py-4">
-              <p className="text-sm text-stone-500">{missingRequired.length ? `Map required fields: ${missingRequired.map((f) => f.label).join(", ")}` : "Ready to validate."}</p>
+            <div className="flex items-center justify-between gap-4 border-t border-zinc-100 px-5 py-4">
+              <p className="text-sm text-zinc-500">{missingRequired.length ? `Map required fields: ${missingRequired.map((f) => f.label).join(", ")}` : "Ready to validate."}</p>
               <Button disabled={missingRequired.length > 0} loading={busy && !analysis} onClick={() => void analyse()}>Validate rows <ArrowRight /></Button>
             </div>
           </Card>
@@ -202,23 +202,23 @@ export default function ImportPage({ entity }: { entity: Entity }) {
                 <StatCard label="Duplicates in file" value={counts.dup} icon={Copy} />
                 <StatCard label="Invalid rows" value={counts.invalid} icon={XCircle} />
               </div>
-              <div className="max-h-[28rem] overflow-auto rounded-xl ring-1 ring-stone-200">
+              <div className="max-h-[28rem] overflow-auto rounded-xl ring-1 ring-zinc-200">
                 <table className="w-full text-sm">
-                  <thead className="sticky top-0 bg-stone-50 text-left text-xs text-stone-500"><tr><th className="px-3 py-2">Row</th><th className="px-3 py-2">Record</th><th className="px-3 py-2">Result</th><th className="px-3 py-2">Action</th></tr></thead>
-                  <tbody className="divide-y divide-stone-100">
+                  <thead className="sticky top-0 bg-zinc-50 text-left text-xs text-zinc-500"><tr><th className="px-3 py-2">Row</th><th className="px-3 py-2">Record</th><th className="px-3 py-2">Result</th><th className="px-3 py-2">Action</th></tr></thead>
+                  <tbody className="divide-y divide-zinc-100">
                     {analysis.map((a) => {
                       const r = mapped[a.row];
                       const title = entity === "brokers" ? r.fullName : `${r.firstName ?? ""} ${r.lastName ?? ""}`;
                       return (
                         <tr key={a.row} className={cn(a.status === "invalid" && "bg-red-50/40")}>
-                          <td className="px-3 py-2 text-stone-400 tabular-nums">{a.row + 2}</td>
-                          <td className="px-3 py-2"><div className="font-medium">{title || "—"}</div><div className="text-xs text-stone-500">{r.email}</div></td>
+                          <td className="px-3 py-2 text-zinc-400 tabular-nums">{a.row + 2}</td>
+                          <td className="px-3 py-2"><div className="font-medium">{title || "—"}</div><div className="text-xs text-zinc-500">{r.email}</div></td>
                           <td className="px-3 py-2">
                             {a.status === "new" && <Badge tone="green"><CheckCircle2 className="size-3" /> New</Badge>}
                             {a.status === "existing" && <Badge tone="blue">Existing</Badge>}
                             {a.status === "duplicate_in_file" && <Badge tone="amber">Duplicate</Badge>}
                             {a.status === "invalid" && <Badge tone="red">Invalid</Badge>}
-                            {a.message && <div className="mt-1 text-xs text-stone-500">{a.message}</div>}
+                            {a.message && <div className="mt-1 text-xs text-zinc-500">{a.message}</div>}
                           </td>
                           <td className="px-3 py-2 text-xs">
                             {a.status === "new" ? "Create" : a.status === "existing" ? (
@@ -232,8 +232,8 @@ export default function ImportPage({ entity }: { entity: Entity }) {
                 </table>
               </div>
             </CardBody>
-            <div className="flex flex-wrap items-center justify-between gap-4 border-t border-stone-100 px-5 py-4">
-              <p className="text-sm text-stone-600"><strong>{toCreate}</strong> to create · <strong>{toUpdate}</strong> to update · {analysis.length - toCreate - toUpdate} skipped</p>
+            <div className="flex flex-wrap items-center justify-between gap-4 border-t border-zinc-100 px-5 py-4">
+              <p className="text-sm text-zinc-600"><strong>{toCreate}</strong> to create · <strong>{toUpdate}</strong> to update · {analysis.length - toCreate - toUpdate} skipped</p>
               <Button disabled={toCreate + toUpdate === 0} onClick={() => setConfirm(true)}><Upload /> Import {toCreate + toUpdate} {label}</Button>
             </div>
           </Card>

@@ -3,15 +3,10 @@ import { paginationOptsValidator } from "convex/server";
 import { mutation, query } from "./_generated/server";
 import type { Doc } from "./_generated/dataModel";
 import { leadStatus } from "./schema";
-import { requirePermission, requireUser, conflictError, notFound, type ActiveUser } from "./lib/auth";
-import { can } from "./lib/permissionMatrix";
+import { requirePermission, conflictError, notFound } from "./lib/auth";
 import { audit } from "./lib/audit";
 import { notify } from "./lib/queue";
 import { clean, isEmail, searchText } from "./lib/text";
-
-function canSee(user: ActiveUser, lead: Doc<"leads">) {
-  return can(user, "leads.read_all") || (can(user, "leads.read_authorized") && lead.visibleToMarketing);
-}
 
 export const list = query({
   args: {
@@ -22,8 +17,7 @@ export const list = query({
     mine: v.optional(v.boolean()),
   },
   handler: async (ctx, a) => {
-    const user = await requirePermission(ctx, "leads.read_all", "leads.read_authorized");
-    const all = can(user, "leads.read_all");
+    const user = await requirePermission(ctx, "leads.read");
     const base = (() => {
       const term = a.search?.trim();
       if (term) return ctx.db.query("leads").withSearchIndex("search", (q) => q.search("searchText", term.toLowerCase()).eq("archivedAt", undefined));
@@ -36,7 +30,6 @@ export const list = query({
       .filter((q) =>
         q.and(
           q.eq(q.field("archivedAt"), undefined),
-          all ? true : q.eq(q.field("visibleToMarketing"), true),
           a.status ? q.eq(q.field("status"), a.status) : true,
         ),
       )
@@ -59,9 +52,9 @@ export const list = query({
 export const get = query({
   args: { id: v.id("leads") },
   handler: async (ctx, { id }) => {
-    const user = await requirePermission(ctx, "leads.read_all", "leads.read_authorized");
+    await requirePermission(ctx, "leads.read");
     const l = await ctx.db.get(id);
-    if (!l || !canSee(user, l)) return null;
+    if (!l) return null;
     const [assignee, property, form] = await Promise.all([
       l.assignedTo ? ctx.db.get(l.assignedTo) : null,
       l.propertyId ? ctx.db.get(l.propertyId) : null,
@@ -75,12 +68,11 @@ export const get = query({
 export const counts = query({
   args: {},
   handler: async (ctx) => {
-    const user = await requirePermission(ctx, "leads.read_all", "leads.read_authorized");
-    const all = can(user, "leads.read_all");
+    await requirePermission(ctx, "leads.read");
     const out: Record<string, number> = { new: 0, contacted: 0, qualified: 0, follow_up: 0, converted: 0, closed: 0 };
     for (const s of Object.keys(out)) {
       const rows = await ctx.db.query("leads").withIndex("by_status", (q) => q.eq("status", s as Doc<"leads">["status"])).collect();
-      out[s] = rows.filter((l) => !l.archivedAt && (all || l.visibleToMarketing)).length;
+      out[s] = rows.filter((l) => !l.archivedAt).length;
     }
     return out;
   },
@@ -93,28 +85,20 @@ export const update = mutation({
     status: v.optional(leadStatus),
     notes: v.optional(v.string()),
     assignedTo: v.optional(v.union(v.id("users"), v.null())),
-    visibleToMarketing: v.optional(v.boolean()),
   },
   handler: async (ctx, a) => {
-    const user = await requireUser(ctx);
+    const user = await requirePermission(ctx, "leads.write");
     const l = await ctx.db.get(a.id);
-    if (!l || !canSee(user, l)) throw notFound("Lead");
-    // Directors/Admin manage leads fully; Marketing may only update status/notes of authorized leads.
-    const full = can(user, "leads.write");
-    if (!full && (a.assignedTo !== undefined || a.visibleToMarketing !== undefined)) {
-      throw new ConvexError({ code: "FORBIDDEN", message: "Only directors can assign leads or change visibility." });
-    }
-    if (!full && !can(user, "leads.read_authorized")) throw new ConvexError({ code: "FORBIDDEN", message: "Not allowed." });
+    if (!l) throw notFound("Lead");
     if (l.version !== a.expectedVersion) throw conflictError("lead");
     const patch: Partial<Doc<"leads">> = { updatedBy: user._id, updatedAt: Date.now(), version: l.version + 1 };
     const changes: string[] = [];
     if (a.status && a.status !== l.status) { patch.status = a.status; changes.push(`status → ${a.status}`); }
     if (a.notes !== undefined && a.notes !== l.notes) { patch.notes = clean(a.notes); changes.push("notes"); }
-    if (a.visibleToMarketing !== undefined && a.visibleToMarketing !== l.visibleToMarketing) { patch.visibleToMarketing = a.visibleToMarketing; changes.push(`marketing visibility ${a.visibleToMarketing ? "on" : "off"}`); }
     if (a.assignedTo !== undefined && (a.assignedTo ?? undefined) !== l.assignedTo) {
       if (a.assignedTo) {
         const assignee = await ctx.db.get(a.assignedTo);
-        if (!assignee?.role || assignee.role === "marketing" || assignee.status === "suspended") throw new ConvexError("Leads can only be assigned to active directors or admins.");
+        if (!assignee?.role || assignee.status === "suspended") throw new ConvexError("Leads can only be assigned to active directors or admins.");
         changes.push(`assigned to ${assignee.name}`);
         if (assignee._id !== user._id) {
           await notify(ctx, [assignee._id], { type: "lead", title: `${user.name ?? "Someone"} assigned you a lead: ${l.name}`, link: `/leads/${l._id}` });
@@ -139,7 +123,7 @@ export const createManual = mutation({
     const now = Date.now();
     const id = await ctx.db.insert("leads", {
       source: a.source.trim() || "Manual entry", name, email, phone: clean(a.phone), company: clean(a.company),
-      answers: [], consent: false, propertyId: a.propertyId, status: "new", notes: clean(a.notes), visibleToMarketing: false,
+      answers: [], consent: false, propertyId: a.propertyId, status: "new", notes: clean(a.notes),
       searchText: searchText(name, email, a.phone, a.company), submittedAt: now, updatedAt: now, updatedBy: user._id, version: 1,
     });
     await audit(ctx, user._id, "create", "leads", id, `Added lead ${name} manually`);
@@ -162,7 +146,7 @@ export const archive = mutation({
 export const erase = mutation({
   args: { id: v.id("leads"), confirmName: v.string() },
   handler: async (ctx, { id, confirmName }) => {
-    const user = await requirePermission(ctx, "users.manage");
+    const user = await requirePermission(ctx, "leads.erase");
     const l = await ctx.db.get(id);
     if (!l) throw notFound("Lead");
     if (confirmName.trim() !== l.name) throw new ConvexError("Type the lead's exact name to confirm permanent deletion.");

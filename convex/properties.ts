@@ -56,21 +56,20 @@ export const get = query({
     const user = await requirePermission(ctx, "properties.read");
     const p = await ctx.db.get(id);
     if (!p) return null;
-    const [brokers, campaigns, forms, assets] = await Promise.all([
+    const [brokers, forms, documents] = await Promise.all([
       can(user, "brokers.read")
         ? ctx.db.query("brokers").withIndex("by_property", (q) => q.eq("propertyId", id)).filter((q) => q.eq(q.field("archivedAt"), undefined)).take(50)
         : Promise.resolve([]),
-      can(user, "campaigns.read") ? ctx.db.query("marketingCampaigns").withIndex("by_property", (q) => q.eq("propertyId", id)).take(50) : Promise.resolve([]),
       ctx.db.query("leadForms").filter((q) => q.eq(q.field("propertyId"), id)).take(50),
-      ctx.db.query("marketingAssets").filter((q) => q.and(q.eq(q.field("propertyId"), id), q.eq(q.field("archivedAt"), undefined))).take(50),
+      can(user, "documents.read")
+        ? ctx.db.query("documents").filter((q) => q.and(q.eq(q.field("propertyId"), id), q.eq(q.field("archivedAt"), undefined))).take(50)
+        : Promise.resolve([]),
     ]);
-    const visibleAssets = assets.filter((as) => can(user, "library.write") || as.audience === "company");
     return {
       ...p,
       brokers: brokers.map((b) => ({ _id: b._id, fullName: b.fullName, company: b.company })),
-      campaigns: campaigns.map((c) => ({ _id: c._id, name: c.name, status: c.status })),
       forms: forms.filter((f) => !f.archivedAt).map((f) => ({ _id: f._id, title: f.title, status: f.status, submissionCount: f.submissionCount })),
-      assets: visibleAssets.map((as) => ({ _id: as._id, name: as.name, category: as.category })),
+      documents: documents.map((d) => ({ _id: d._id, name: d.name, category: d.category })),
     };
   },
 });

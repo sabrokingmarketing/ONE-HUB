@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/input";
 import { NotificationRow } from "@/components/layout/NotificationsPopover";
 
-const TYPES = ["", "lead", "meeting", "announcement", "document", "employee", "post_failed", "campaign", "invitation", "system"];
+const TYPES = ["", "lead", "meeting", "announcement", "document", "employee", "invitation", "system"];
 
 export default function NotificationsPage() {
   const [tab, setTab] = useState<"all" | "unread">("all");

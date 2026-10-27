@@ -5,7 +5,7 @@
 - **Individual accounts only**, invite-only sign-up bound to the invited email; passwords ≥10 chars with letters + digits; reset via 8-digit emailed code (15-minute expiry); reset never reveals whether an account exists.
 - **Server-side authorisation** on every query/mutation (`requireUser`, `requirePermission`). Suspended users are rejected on every call and their sessions are deleted.
 - **At least one active Super Admin** is enforced.
-- **Least privilege**: marketing never sees brokers/employees; marketing only sees leads from forms explicitly shared with marketing; directors only see library files marked "share with directors".
+- **Least privilege**: directors cannot manage users, settings, integrations or the audit log, and cannot permanently erase personal data (Super Admin only).
 - **Public surface** limited to `leadForms.publicGet` (form definition only) and `leadForms.submit` (validation, honeypot, minimum fill time, per-form rate limit, option whitelisting, length caps).
 - **No public file URLs**: Convex storage URLs are unguessable and only returned to authorised users.
 - **Tokens never leave the server**; list queries strip them.
@@ -28,6 +28,6 @@ Obligations code cannot meet (owner: ONE Property Holdings):
 2. Publish a **privacy notice** and link it from public lead forms.
 3. Define **retention schedules** and run periodic reviews (an automated retention job is planned).
 4. Handle **data-subject requests** (access, correction, deletion) within statutory timelines.
-5. **Operator agreements** with processors (Convex, Cloudflare, Resend, Meta, Google, Microsoft, LinkedIn), including cross-border transfer assessment (section 72), since data is hosted outside South Africa.
+5. **Operator agreements** with processors (Convex, Cloudflare, Resend, and later Google/Microsoft if calendars are connected), including cross-border transfer assessment (section 72), since data is hosted outside South Africa.
 6. **Breach notification** procedure (Information Regulator and data subjects).
 7. Staff training on handling employee and lead data.

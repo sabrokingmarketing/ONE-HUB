@@ -102,32 +102,32 @@ function Composer({ onSent }: { onSent: () => void }) {
             <Field label="Department"><Select value={department} onChange={(e) => setDepartment(e.target.value)}><option value="">Choose…</option>{departments?.map((d) => <option key={d.name} value={d.name}>{d.name} ({d.count})</option>)}</Select></Field>
           )}
           {audience === "selected" && (
-            <div className="max-h-72 space-y-1 overflow-y-auto rounded-xl bg-stone-50 p-2">
+            <div className="max-h-72 space-y-1 overflow-y-auto rounded-xl bg-zinc-50 p-2">
               {filteredAll.map((r) => (
-                <Checkbox key={r._id} className="w-full rounded-lg px-2 py-1.5 hover:bg-white" checked={selected.has(r._id)} onChange={(v) => setSelected((s) => { const n = new Set(s); if (v) n.add(r._id); else n.delete(r._id); return n; })} label={<span><span className="font-medium">{r.name}</span> <span className="text-xs text-stone-500">{r.department}</span></span>} />
+                <Checkbox key={r._id} className="w-full rounded-lg px-2 py-1.5 hover:bg-white" checked={selected.has(r._id)} onChange={(v) => setSelected((s) => { const n = new Set(s); if (v) n.add(r._id); else n.delete(r._id); return n; })} label={<span><span className="font-medium">{r.name}</span> <span className="text-xs text-zinc-500">{r.department}</span></span>} />
               ))}
             </div>
           )}
           <div className="rounded-xl bg-brand-50 p-4 text-sm">
             <div className="flex items-center gap-2 font-medium text-brand-800"><Users className="size-4" /> {recipients?.recipients.length ?? "…"} recipients</div>
             {!!recipients?.missingEmail && <div className="mt-1 flex items-center gap-1.5 text-xs text-amber-700"><AlertTriangle className="size-3.5" /> {recipients.missingEmail} matching employees have no email address</div>}
-            {recipients && recipients.mode !== "live" && <div className="mt-2 text-xs text-stone-600">Email mode: <Badge tone="amber">{recipients.mode}</Badge> — {recipients.mode === "log" ? "emails are only logged, not delivered." : "all emails go to the test inbox."}</div>}
+            {recipients && recipients.mode !== "live" && <div className="mt-2 text-xs text-zinc-600">Email mode: <Badge tone="amber">{recipients.mode}</Badge> — {recipients.mode === "log" ? "emails are only logged, not delivered." : "all emails go to the test inbox."}</div>}
           </div>
         </CardBody>
       </Card>
 
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen} title="Email preview" size="lg">
-        {previewHtml ? <iframe title="Email preview" sandbox="" srcDoc={previewHtml} className="h-[60vh] w-full rounded-xl ring-1 ring-stone-200" /> : <div className="h-[60vh] animate-pulse rounded-xl bg-stone-100" />}
+        {previewHtml ? <iframe title="Email preview" sandbox="" srcDoc={previewHtml} className="h-[60vh] w-full rounded-xl ring-1 ring-zinc-200" /> : <div className="h-[60vh] animate-pulse rounded-xl bg-zinc-100" />}
       </Dialog>
 
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen} title="Confirm announcement"
         footer={<><Button variant="ghost" onClick={() => setConfirmOpen(false)}>Cancel</Button><Button disabled={!confirmed} loading={sending} onClick={() => void doSend()}><Send /> Send to {recipients?.recipients.length}</Button></>}>
         <div className="space-y-4 text-sm">
-          <div className="rounded-xl bg-stone-50 p-4"><div className="text-xs text-stone-500">Subject</div><div className="font-medium">{subject}</div></div>
+          <div className="rounded-xl bg-zinc-50 p-4"><div className="text-xs text-zinc-500">Subject</div><div className="font-medium">{subject}</div></div>
           <div>
-            <div className="mb-2 text-xs text-stone-500">Recipients ({recipients?.recipients.length})</div>
-            <div className="max-h-48 overflow-y-auto rounded-xl ring-1 ring-stone-200">
-              {recipients?.recipients.map((r) => <div key={r._id} className="flex justify-between border-b border-stone-100 px-3 py-2 last:border-0"><span>{r.name}</span><span className="text-stone-500">{r.email}</span></div>)}
+            <div className="mb-2 text-xs text-zinc-500">Recipients ({recipients?.recipients.length})</div>
+            <div className="max-h-48 overflow-y-auto rounded-xl ring-1 ring-zinc-200">
+              {recipients?.recipients.map((r) => <div key={r._id} className="flex justify-between border-b border-zinc-100 px-3 py-2 last:border-0"><span>{r.name}</span><span className="text-zinc-500">{r.email}</span></div>)}
             </div>
           </div>
           <Checkbox checked={confirmed} onChange={setConfirmed} label="I've reviewed the message and the recipient list." />
@@ -142,10 +142,10 @@ function History() {
   return (
     <Card className="overflow-hidden">
       {!rows ? <LoadingRows /> : rows.length === 0 ? <EmptyState icon={Mail} title="No updates sent yet" /> : (
-        <ul className="divide-y divide-stone-100">
+        <ul className="divide-y divide-zinc-100">
           {rows.map((r) => (
             <li key={r._id} className="flex flex-col gap-2 px-5 py-4 sm:flex-row sm:items-center">
-              <div className="min-w-0 flex-1"><div className="font-medium text-stone-900">{r.subject}</div><div className="text-xs text-stone-500">{r.senderName} · {formatDateTime(r.sentAt)} · {r.recipientCount} recipients · {r.audience === "department" ? r.department : r.audience}</div></div>
+              <div className="min-w-0 flex-1"><div className="font-medium text-zinc-900">{r.subject}</div><div className="text-xs text-zinc-500">{r.senderName} · {formatDateTime(r.sentAt)} · {r.recipientCount} recipients · {r.audience === "department" ? r.department : r.audience}</div></div>
               <div className="flex flex-wrap items-center gap-2 text-xs">
                 <StatusBadge status={r.status} />
                 {r.tally.sent > 0 && <Badge tone="green"><CheckCircle2 className="size-3" /> {r.tally.sent} delivered</Badge>}

@@ -83,7 +83,7 @@ const fmt = (ms: number, tz: string) =>
 export const range = query({
   args: { from: v.number(), to: v.number() },
   handler: async (ctx, a) => {
-    const user = await requirePermission(ctx, "meetings.manage", "meetings.view_invited");
+    const user = await requirePermission(ctx, "meetings.manage", "calendar.personal");
     if (a.to - a.from > 62 * 24 * 3600_000) throw new ConvexError("Range too large.");
     const rows = await ctx.db.query("meetings").withIndex("by_startsAt", (q) => q.gte("startsAt", a.from - 24 * 3600_000).lt("startsAt", a.to)).collect();
     const out = [];
@@ -100,7 +100,7 @@ export const range = query({
 export const upcoming = query({
   args: { limit: v.optional(v.number()) },
   handler: async (ctx, a) => {
-    const user = await requirePermission(ctx, "meetings.manage", "meetings.view_invited");
+    const user = await requirePermission(ctx, "meetings.manage", "calendar.personal");
     const rows = await ctx.db.query("meetings").withIndex("by_startsAt", (q) => q.gte("startsAt", Date.now() - 3600_000)).take(100);
     const out = [];
     for (const m of rows) {
@@ -115,7 +115,7 @@ export const upcoming = query({
 export const get = query({
   args: { id: v.id("meetings") },
   handler: async (ctx, { id }) => {
-    const user = await requirePermission(ctx, "meetings.manage", "meetings.view_invited");
+    const user = await requirePermission(ctx, "meetings.manage", "calendar.personal");
     const m = await ctx.db.get(id);
     if (!m || !(await canView(ctx, user, m))) return null;
     const parts = await ctx.db.query("meetingParticipants").withIndex("by_meeting", (q) => q.eq("meetingId", id)).collect();
