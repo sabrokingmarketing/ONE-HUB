@@ -57,8 +57,8 @@ function Sidebar({ portal, onNavigate }: { portal: Portal; onNavigate?: () => vo
   const allowed = portalsFor(me.role!);
   return (
     <div className="flex h-full flex-col">
-      <div className="flex h-16 items-center px-4">
-        <Link to={me.role === "marketing" ? homeFor(me.role) : PORTAL_HOME[portal]} onClick={onNavigate}><Logo /></Link>
+      <div className="flex h-20 items-center justify-center px-4">
+        <Link to={me.role === "marketing" ? homeFor(me.role) : PORTAL_HOME[portal]} onClick={onNavigate} aria-label="ONE HUB home"><Logo className="h-11" /></Link>
       </div>
       <div className="mx-4 h-px bg-gradient-to-r from-transparent via-zinc-300/70 to-transparent" />
 
