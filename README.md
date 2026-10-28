@@ -33,6 +33,7 @@ Then open the activation link the bootstrap command printed and create the first
 | `npm run typecheck` | App, Convex functions and service worker |
 | `npm test` | Backend tests (convex-test): permissions, sync, conflicts, imports, forms, email |
 | `npm run build` | Production build into `dist/` |
+| `npm run setup:convex` | One-time Convex setup: project, auth keys, `SITE_URL`, first Super Admin invite (`--prod --site-url …` for production) |
 | `npm run codegen:offline` | Regenerate `convex/_generated` without network access |
 | `npm run ui-harness` | **Dev-only** visual QA with fictional sample data (never deployed) |
 

@@ -6,6 +6,10 @@
 
 ## 1. Convex (development)
 
+Shortcut: `npm install && npm run setup:convex` runs every step below and creates the first Super Admin
+invitation for `kelvin@sabroking.co.za` (override with `ADMIN_EMAIL=… ADMIN_NAME=…`). For production:
+`npm run setup:convex -- --prod --site-url https://hub.<your-domain>`.
+
 ```bash
 npm install
 npx convex dev
