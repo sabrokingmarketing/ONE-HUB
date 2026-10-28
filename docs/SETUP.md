@@ -49,7 +49,7 @@ The `one-hub` project is a **Worker with static assets** (Workers Builds), conne
 
 | Setting | Value |
 |---|---|
-| Build command | `npx convex deploy --cmd 'npm run build'` (needs `CONVEX_DEPLOY_KEY` from the Convex prod deployment) or `npm run build` with `VITE_CONVEX_URL` set |
+| Build command | Leave empty: `wrangler.toml` runs `scripts/cf-build.sh`. With `CONVEX_DEPLOY_KEY` (Convex prod deploy key) set, `main` runs `npx convex deploy --cmd 'npm run build'`; other branches build against the same deployment without deploying functions |
 | Deploy command | `npx wrangler deploy` (Workers Builds default) |
 | Node version | 22 (pinned in `.node-version`) |
 | Build env vars | `CONVEX_DEPLOY_KEY` (secret) **or** `VITE_CONVEX_URL` |
