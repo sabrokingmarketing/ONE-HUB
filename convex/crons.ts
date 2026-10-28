@@ -10,5 +10,6 @@ const crons = cronJobs();
 
 crons.interval("send meeting reminders", { minutes: 5 }, internal.meetings.sendDueReminders, {});
 crons.interval("recover email queue", { minutes: 10 }, internal.emails.recoverStuck, {});
+crons.daily("purge old email bodies", { hourUTC: 1, minuteUTC: 17 }, internal.emails.purgeOldBodies, {});
 
 export default crons;

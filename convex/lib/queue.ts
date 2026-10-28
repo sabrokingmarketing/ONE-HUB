@@ -1,5 +1,6 @@
 import type { MutationCtx } from "../_generated/server";
 import type { Id } from "../_generated/dataModel";
+import { ConvexError } from "convex/values";
 import { internal } from "../_generated/api";
 
 /**
@@ -26,8 +27,11 @@ export async function enqueueEmail(
   return id;
 }
 
+/** Absolute link into the app. SITE_URL must be set, so emails never point at a wrong host. */
 export function siteUrl(path = "") {
-  const base = (process.env.SITE_URL ?? "http://localhost:5173").replace(/\/$/, "");
+  const raw = process.env.SITE_URL?.trim();
+  if (!raw) throw new ConvexError("SITE_URL is not configured on this Convex deployment. Run: npx convex env set SITE_URL <app url>");
+  const base = raw.replace(/\/$/, "");
   return `${base}${path}`;
 }
 

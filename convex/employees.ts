@@ -171,7 +171,7 @@ export const setImage = mutation({
     const e = await ctx.db.get(id);
     if (!e) throw notFound("Employee");
     const meta = await ctx.db.system.get(storageId);
-    if (!meta?.contentType?.startsWith("image/") || meta.size > 3_000_000) {
+    if (!meta?.contentType?.startsWith("image/") || meta.contentType === "image/svg+xml" || meta.size > 3_000_000) {
       await ctx.storage.delete(storageId);
       throw new ConvexError("Profile images must be an image under 3 MB.");
     }

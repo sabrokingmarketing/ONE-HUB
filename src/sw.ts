@@ -9,7 +9,9 @@ declare const self: ServiceWorkerGlobalScope;
 // always fetched live from Convex, so no confidential records persist offline.
 cleanupOutdatedCaches();
 precacheAndRoute(self.__WB_MANIFEST);
-registerRoute(new NavigationRoute(createHandlerBoundToURL("/index.html"), { denylist: [/^\/api\//] }));
+// Public lead forms (/f/*) always come from the network: they carry their own embeddable
+// frame headers, which the cached app shell (served with X-Frame-Options: DENY) would replace.
+registerRoute(new NavigationRoute(createHandlerBoundToURL("/index.html"), { denylist: [/^\/api\//, /^\/f\//] }));
 registerRoute(({ request }) => request.destination === "font", new CacheFirst({ cacheName: "fonts" }));
 
 self.addEventListener("message", (e) => {

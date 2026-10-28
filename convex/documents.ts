@@ -70,7 +70,8 @@ export const create = mutation({
     const user = await requirePermission(ctx, "documents.write");
     const meta = await ctx.db.system.get(a.storageId);
     if (!meta) throw new ConvexError("Upload not found.");
-    if (meta.size > MAX_BYTES || !ALLOWED.test(meta.contentType ?? "")) {
+    // SVG can carry script, and documents don't need it.
+    if (meta.size > MAX_BYTES || !ALLOWED.test(meta.contentType ?? "") || meta.contentType === "image/svg+xml") {
       await ctx.storage.delete(a.storageId);
       throw new ConvexError("Unsupported file type or file larger than 200 MB.");
     }

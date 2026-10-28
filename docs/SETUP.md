@@ -1,6 +1,6 @@
 # Setup, environments & deployment
 
-> **Isolation rule:** ONE HUB gets its *own* Convex project, its *own* Cloudflare Pages project, its
+> **Isolation rule:** ONE HUB gets its *own* Convex project, its *own* Cloudflare Workers project, its
 > *own* Resend API key and sending (sub)domain. Do not reuse or modify any existing project, DNS
 > record, database or key.
 
@@ -16,12 +16,13 @@ Choose **"create a new project"**, name it `one-hub`. This writes `CONVEX_DEPLOY
 ```bash
 npx @convex-dev/auth                                   # generates JWT_PRIVATE_KEY + JWKS on the deployment
 npx convex env set SITE_URL http://localhost:5173
-npx convex env set ONEHUB_BOOTSTRAP_ADMIN_EMAIL you@company.co.za
 # Email stays in safe "log" mode until you change it (see §4)
+npx convex run system:bootstrapAdmin '{"email":"you@company.co.za","name":"Your Name"}'
 ```
 
-Run `npm run dev`, open `/accept-invite?bootstrap=1`, register with the bootstrap email. That account
-becomes the only Super Admin; the bootstrap path closes as soon as a Super Admin exists.
+The last command prints a one-time activation link (valid 24 hours) for the first Super Admin. Open it,
+set a password, and invite everyone else from Admin → Users & roles. There is no open signup: the command
+is internal-only (it needs the deployment's credentials) and refuses once an active Super Admin exists.
 
 ## 2. Convex (production)
 
@@ -30,24 +31,28 @@ Production is a separate deployment in the same new project:
 ```bash
 npx convex deploy                     # prompts before pushing to prod
 npx convex env set --prod SITE_URL https://hub.<your-domain>
-npx convex env set --prod ONEHUB_BOOTSTRAP_ADMIN_EMAIL ...
 npx @convex-dev/auth --prod
+npx convex run --prod system:bootstrapAdmin '{"email":"you@company.co.za","name":"Your Name"}'
 ```
 
-## 3. Cloudflare Pages (frontend)
+`SITE_URL` must be set on every deployment before the bootstrap command or any email: the backend refuses
+to build links without it rather than fall back to a wrong host.
 
-Create a **new** Pages project (e.g. `one-hub`) connected to this repo:
+## 3. Cloudflare Workers (frontend)
+
+The `one-hub` project is a **Worker with static assets** (Workers Builds), connected to this repo.
+`wrangler.toml` serves `dist` as assets with single-page-app fallback; there is no Worker script.
 
 | Setting | Value |
 |---|---|
 | Build command | `npx convex deploy --cmd 'npm run build'` (needs `CONVEX_DEPLOY_KEY` from the Convex prod deployment) or `npm run build` with `VITE_CONVEX_URL` set |
-| Output directory | `dist` (also declared in `wrangler.toml` as `pages_build_output_dir`) |
+| Deploy command | `npx wrangler deploy` (Workers Builds default) |
 | Node version | 22 (pinned in `.node-version`) |
-| Env vars | `CONVEX_DEPLOY_KEY` (secret) **or** `VITE_CONVEX_URL` |
+| Build env vars | `CONVEX_DEPLOY_KEY` (secret) **or** `VITE_CONVEX_URL` |
 
-`public/_redirects` provides SPA routing; `public/_headers` sets HSTS, CSP, frame and referrer policies
-(lead forms under `/f/*` are embeddable). Add a custom subdomain such as `hub.<domain>`. This adds one
-**new** DNS record only; leave all existing records untouched.
+Unknown paths fall back to `index.html` (`not_found_handling` in `wrangler.toml`); `public/_headers` sets
+HSTS, CSP, frame and referrer policies (lead forms under `/f/*` are embeddable). Add a custom subdomain such
+as `hub.<domain>`. This adds one **new** DNS record only; leave all existing records untouched.
 
 ## 4. Resend (email)
 

@@ -8,7 +8,7 @@ third-party summaries.
 |---|---|---|
 | Convex (Starter/free) | ~1M function calls/mo, ~0.5 GB database, ~1 GB file storage, ~1 GB DB bandwidth (unconfirmed), action compute allowance | Indexed queries and pagination everywhere; crons do one indexed lookup when idle; dashboards use bounded scans (fine below ~10k rows per table). The 1-minute publishing cron is about 43k calls/month. |
 | Resend (free) | 3,000 emails/mo, **100/day** | Queue paces sends (~1.6/s); per-job idempotency keys and dedupe keys; email fallback is opt-in. ONE HUB counts sends per UTC day and never exceeds `ONEHUB_EMAIL_DAILY_LIMIT` (default 100) or `ONEHUB_EMAIL_MONTHLY_LIMIT` (default 3,000). An announcement larger than the remaining allowance needs the director's confirmation; the rest is sent automatically after the daily reset. Provider quota errors also wait for the reset instead of failing. |
-| Cloudflare Pages | Static requests unlimited; ~500 builds/mo; Workers/Functions ~100k req/day | ONE HUB is a static SPA (no Pages Functions), so request limits don't apply. |
+| Cloudflare Workers (static assets) | Static asset requests free and unlimited; Workers Builds has a monthly build-minute allowance; Worker script requests ~100k/day | ONE HUB is a static SPA with no Worker script, so the request limit doesn't apply. |
 | Google / Microsoft calendar APIs (planned) | Free, rate-limited | Sync on demand; no tight polling. |
 
 ## Media storage

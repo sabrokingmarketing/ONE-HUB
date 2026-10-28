@@ -3,7 +3,7 @@
 ## 1. Overview
 
 ```
- Browser / installed PWA (React SPA on Cloudflare Pages)
+ Browser / installed PWA (React SPA on Cloudflare Workers static assets)
         │  WebSocket (reactive queries + mutations)        HTTPS (auth routes)
         ▼                                                   ▼
  ┌──────────────────────────── Convex deployment (one per environment) ────────────────────────────┐

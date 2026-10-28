@@ -126,13 +126,25 @@ ${cta}
 
 export type DeliveryError = Error & { retryable?: boolean; quota?: "daily" | "monthly" };
 
+/**
+ * Sends one email through Resend. `credential` marks emails that grant access (invitation links,
+ * password-reset codes): test mode never redirects those to the shared test inbox, because whoever
+ * reads that inbox could take over the account; and log mode refuses them, since logging would
+ * silently swallow a code the person is waiting for.
+ */
 export async function deliverEmail(
   to: string,
   subject: string,
   html: string,
   idempotencyKey?: string,
+  opts: { credential?: boolean } = {},
 ): Promise<{ status: "sent" | "logged"; providerId?: string }> {
   const mode = emailMode();
+  if (mode === "log" && opts.credential) {
+    const err: DeliveryError = new Error("Email delivery is switched off (ONEHUB_EMAIL_MODE=log), so this sign-in email can't be sent.");
+    err.retryable = false;
+    throw err;
+  }
   if (mode === "log") {
     console.log(`[email:log] to=${to} subject=${subject}`);
     return { status: "logged" };
@@ -141,7 +153,7 @@ export async function deliverEmail(
   const from = process.env.ONEHUB_EMAIL_FROM;
   if (!apiKey || !from) throw new Error("Resend is not configured (RESEND_API_KEY / ONEHUB_EMAIL_FROM).");
   let recipient = to;
-  if (mode === "test") {
+  if (mode === "test" && !opts.credential) {
     const testTo = process.env.ONEHUB_EMAIL_TEST_RECIPIENT;
     if (!testTo) throw new Error("ONEHUB_EMAIL_TEST_RECIPIENT is required in test mode.");
     recipient = testTo;

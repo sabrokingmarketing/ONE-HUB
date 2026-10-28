@@ -21,7 +21,7 @@ is now shared through the **Marketing Studio** inside the Directors portal.
 - Vite + React 19 + TypeScript + Tailwind v4 app with a soft, modern design system.
 - Light floating sidebar with icon tiles, breadcrumb top bar, ⌘K global search, notification centre, mobile drawer.
 - Every dashboard row uses equal, fixed-size blocks, so no block is bigger than its neighbours.
-- Invite-only Convex Auth (bootstrap admin, password reset, suspension with session revocation); server-enforced Super Admin / Director permissions; audit logging.
+- Invite-only Convex Auth (first Super Admin via internal `system:bootstrapAdmin` command, password reset, suspension with session revocation); server-enforced Super Admin / Director permissions; audit logging.
 
 **Directors portal**
 - Dashboard: quick actions, KPI tiles, new-leads table, meetings timeline, recent brokers, employee updates, announcements and documents.
@@ -50,6 +50,6 @@ is now shared through the **Marketing Studio** inside the Directors portal.
 
 1. **Convex**: run `npx convex dev` to create the dedicated `one-hub` project.
 2. **Resend**: create the dedicated ONE HUB Resend account and verify the dedicated sending domain `mailoneholdings.co.za`. See [RESEND_SETUP.md](RESEND_SETUP.md).
-3. **Cloudflare**: approve the `one-hub` Pages project and `hub.` subdomain.
+3. **Cloudflare**: approve the `one-hub` Workers project and `hub.` subdomain.
 4. **Brand check**: confirm `#F7931E` (sampled from the logo) is the official orange.
 5. **Bootstrap admin email** for the first Super Admin.

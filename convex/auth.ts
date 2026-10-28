@@ -9,8 +9,9 @@ import { deliverEmail, renderEmail } from "./lib/email";
  * Invite-only authentication.
  *  - Every person has their own account (email + password, min 10 chars).
  *  - A new account can only be created with a valid, unexpired invitation
- *    token that matches the email address — except the very first account,
- *    which must match ONEHUB_BOOTSTRAP_ADMIN_EMAIL and becomes Super Admin.
+ *    token that matches the email address. There is no open signup path: the
+ *    first Super Admin's invitation is created by `system:bootstrapAdmin`, an
+ *    internal mutation only someone holding the deployment's credentials can run.
  *  - Password reset uses an 8-digit one-time code delivered by Resend.
  */
 
@@ -31,6 +32,8 @@ const PasswordReset = Email({
         intro: "Use this code to choose a new password. It expires in 15 minutes.",
         bodyHtml: `<div style="font-size:28px;font-weight:700;letter-spacing:.3em;padding:16px 0">${token}</div><p style="color:#78716C">If you didn't request this, you can ignore this email.</p>`,
       }),
+      undefined,
+      { credential: true },
     );
   },
 });
@@ -63,31 +66,6 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
       const email = String(args.profile.email ?? "").toLowerCase();
       const inviteToken = args.profile.inviteToken as string | undefined;
       const name = (args.profile.name as string | undefined) ?? email.split("@")[0];
-
-      const anyAdmin = await ctx.db
-        .query("users")
-        .withIndex("by_role", (q) => q.eq("role", "super_admin"))
-        .first();
-      const bootstrap = process.env.ONEHUB_BOOTSTRAP_ADMIN_EMAIL?.trim().toLowerCase();
-      if (!anyAdmin && bootstrap && email === bootstrap) {
-        const id = await ctx.db.insert("users", {
-          email,
-          name,
-          role: "super_admin",
-          status: "active",
-          lastLoginAt: Date.now(),
-          timezone: "Africa/Johannesburg",
-        });
-        await ctx.db.insert("auditLogs", {
-          actorId: id,
-          action: "bootstrap",
-          entity: "users",
-          entityId: id,
-          summary: `Initial Super Admin account created for ${email}`,
-          at: Date.now(),
-        });
-        return id;
-      }
 
       if (!inviteToken) throw new ConvexError("ONE HUB is invite-only. Please use the link in your invitation email.");
       const invite = await ctx.db
