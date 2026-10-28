@@ -10,6 +10,7 @@
     "build": "tsc -b && vite build",
     "typecheck": "tsc -b && tsc -p convex --noEmit && tsc -p tsconfig.sw.json",
     "test": "vitest run",
+    "setup:convex": "bash scripts/setup-convex.sh",
     "codegen:offline": "node scripts/offline-codegen.mjs",
     "ui-harness": "vite --config scripts/ui-harness/vite.config.ts",
     "preview": "vite preview"
