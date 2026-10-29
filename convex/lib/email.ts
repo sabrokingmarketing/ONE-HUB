@@ -19,6 +19,19 @@ const INK = "#1C1917";
 const MUTED = "#57534E";
 const FONT = "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
 export const SENDER_LABEL = "ONE Property Holdings | Internal Communications";
+
+/** ONE HUB's dedicated sending domain, verified only in ONE HUB's own Resend account. */
+export const SENDING_DOMAIN = "mailoneholdings.co.za";
+export const DEFAULT_FROM = `"${SENDER_LABEL}" <notifications@${SENDING_DOMAIN}>`;
+
+/** The configured From address, falling back to the standard ONE HUB sender. */
+export function fromAddress(): string {
+  return process.env.ONEHUB_EMAIL_FROM?.trim() || DEFAULT_FROM;
+}
+
+export function domainOf(address: string): string | null {
+  return address.match(/@([^>\s]+)/)?.[1]?.toLowerCase() ?? null;
+}
 const logoUrl = () => `${(process.env.SITE_URL ?? "").replace(/\/$/, "")}/logo-one.png`;
 
 export type EmailMode = "log" | "test" | "live";
@@ -150,8 +163,14 @@ export async function deliverEmail(
     return { status: "logged" };
   }
   const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.ONEHUB_EMAIL_FROM;
-  if (!apiKey || !from) throw new Error("Resend is not configured (RESEND_API_KEY / ONEHUB_EMAIL_FROM).");
+  if (!apiKey) throw new Error("Resend is not configured (RESEND_API_KEY).");
+  const from = fromAddress();
+  // Refuse any other domain so a misconfigured From can never send as another business.
+  if (domainOf(from) !== SENDING_DOMAIN) {
+    const err: DeliveryError = new Error(`ONEHUB_EMAIL_FROM must be an address @${SENDING_DOMAIN} (got ${from}).`);
+    err.retryable = false;
+    throw err;
+  }
   let recipient = to;
   if (mode === "test" && !opts.credential) {
     const testTo = process.env.ONEHUB_EMAIL_TEST_RECIPIENT;

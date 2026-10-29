@@ -102,6 +102,10 @@ npx convex env set ONEHUB_EMAIL_TEST_RECIPIENT 'approved-test-address'
 
 The key is only read inside Convex actions (`convex/lib/email.ts`). It never reaches the browser bundle.
 
+ONE HUB only sends from `@mailoneholdings.co.za`. If `ONEHUB_EMAIL_FROM` is unset it uses
+`"ONE Property Holdings | Internal Communications" <notifications@mailoneholdings.co.za>`, and an address on
+any other domain is refused (nothing is sent, and Admin → Integrations says why).
+
 ## 6. Controlled testing (no bulk sends)
 
 Do these in order, with `ONEHUB_EMAIL_MODE=test`. Test mode redirects **every** email to
