@@ -1,40 +1,47 @@
 import { Logo } from "@/components/layout/Logo";
-import architecture from "@/assets/auth-architecture.webp";
+import photo from "@/assets/auth-mall.webp";
 
 export function AuthLayout({ title, subtitle, children }: { title: string; subtitle?: React.ReactNode; children: React.ReactNode }) {
   return (
-    <div className="relative isolate flex min-h-dvh flex-col overflow-hidden bg-ink text-white">
-      {/* Architectural photo, tinted with the brand ink and a soft orange glow so the white card and copy stay legible. */}
-      <img src={architecture} alt="" aria-hidden draggable={false} className="pointer-events-none absolute inset-0 -z-20 size-full object-cover select-none" />
-      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-r from-ink/85 via-ink/70 to-ink/45" />
-      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(60rem_40rem_at_85%_110%,rgb(247_147_30/0.28),transparent_70%)]" />
+    <div className="min-h-dvh bg-canvas p-0 sm:p-4 lg:p-6">
+      <div className="mx-auto grid min-h-dvh max-w-[1440px] overflow-hidden bg-white sm:min-h-[calc(100dvh-2rem)] sm:rounded-2xl sm:shadow-pop lg:min-h-[calc(100dvh-3rem)] lg:grid-cols-2">
+        {/* Form side */}
+        <div className="flex flex-col px-6 py-8 sm:px-12 sm:py-10 lg:px-16 xl:px-24">
+          <Logo className="h-10 self-start" />
 
-      <header className="flex items-center justify-between px-6 pt-6 sm:px-10 sm:pt-8 lg:px-16">
-        <Logo className="h-9 sm:h-10" />
-        <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-white/80 ring-1 ring-white/15 backdrop-blur">Invite only</span>
-      </header>
+          <div className="flex flex-1 items-center py-12">
+            <div className="mx-auto w-full max-w-sm animate-in">
+              <h1 className="text-3xl font-semibold tracking-tight text-zinc-900">{title}</h1>
+              {subtitle && <p className="mt-2 text-sm text-zinc-500">{subtitle}</p>}
+              <div className="mt-9">{children}</div>
+            </div>
+          </div>
 
-      <main className="mx-auto grid w-full max-w-7xl flex-1 items-center gap-12 px-6 py-10 sm:px-10 lg:grid-cols-[minmax(0,26rem)_1fr] lg:gap-20 lg:px-16">
-        <section className="w-full max-w-md animate-in rounded-2xl bg-white p-7 text-zinc-900 shadow-pop sm:p-9">
-          <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
-          {subtitle && <p className="mt-1.5 text-sm text-zinc-500">{subtitle}</p>}
-          <div className="mt-8">{children}</div>
-        </section>
-
-        <div className="hidden lg:block">
-          <p className="text-xs font-semibold tracking-[0.2em] text-brand-400 uppercase">ONE Property Holdings</p>
-          <h2 className="mt-5 text-5xl leading-[1.08] font-semibold tracking-tight xl:text-6xl">
-            One platform.
-            <br />
-            <span className="text-white/70">Every connection.</span>
-            <br />
-            <span className="text-brand-500">Complete control.</span>
-          </h2>
-          <p className="mt-6 max-w-sm text-base text-white/60">The internal operating system for our directors and administrators.</p>
+          <footer className="flex items-center justify-between text-xs text-zinc-400">
+            <span>© {new Date().getFullYear()} ONE Property Holdings</span>
+            <span>Invite only</span>
+          </footer>
         </div>
-      </main>
 
-      <footer className="px-6 pb-6 text-xs text-white/40 sm:px-10 lg:px-16">© {new Date().getFullYear()} ONE Property Holdings</footer>
+        {/* Photo side */}
+        <div className="relative hidden p-3 lg:block">
+          <div className="relative size-full overflow-hidden rounded-2xl">
+            <img src={photo} alt="" aria-hidden draggable={false} className="absolute inset-0 size-full object-cover object-[30%_center] select-none" />
+            <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-ink/90 via-ink/45 via-40% to-transparent to-75%" />
+            <div className="absolute inset-x-0 bottom-0 p-10 text-white xl:p-12">
+              <p className="inline-flex rounded-full bg-white/15 px-3 py-1 text-[11px] font-semibold tracking-[0.2em] text-white uppercase ring-1 ring-white/25 backdrop-blur-md">ONE Property Holdings</p>
+              <h2 className="mt-4 text-4xl leading-[1.1] font-semibold tracking-tight xl:text-5xl">
+                One platform.
+                <br />
+                Every connection.
+                <br />
+                <span className="text-brand-500">Complete control.</span>
+              </h2>
+              <p className="mt-4 max-w-sm text-sm text-white/70">The internal operating system for our directors and administrators.</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

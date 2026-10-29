@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuthActions } from "@convex-dev/auth/react";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Lock, Mail } from "lucide-react";
 import { AuthLayout } from "./AuthLayout";
-import { Field, Input, Label } from "@/components/ui/input";
+import { Input, Label } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 export default function Login() {
@@ -28,16 +28,23 @@ export default function Login() {
   };
 
   return (
-    <AuthLayout title="Sign in" subtitle="Welcome back to ONE HUB.">
+    <AuthLayout title="Welcome back" subtitle="Sign in to ONE HUB with your work account.">
       <form onSubmit={submit} className="space-y-5">
-        <Field label="Work email"><Input type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@company.co.za" className="h-11" /></Field>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="email">Work email</Label>
+          <div className="relative">
+            <Mail aria-hidden className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-zinc-400" />
+            <Input id="email" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@company.co.za" className="h-11 pl-10" />
+          </div>
+        </div>
         <div className="flex flex-col gap-1.5">
           <div className="flex items-center justify-between">
             <Label htmlFor="password">Password</Label>
             <Link to="/reset-password" className="text-[13px] font-medium text-brand-600 hover:text-brand-700">Forgot password?</Link>
           </div>
           <div className="relative">
-            <Input id="password" type={showPassword ? "text" : "password"} autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} className="h-11 pr-11" />
+            <Lock aria-hidden className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-zinc-400" />
+            <Input id="password" type={showPassword ? "text" : "password"} autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter your password" className="h-11 pr-11 pl-10" />
             <button
               type="button"
               onClick={() => setShowPassword((v) => !v)}
@@ -53,9 +60,7 @@ export default function Login() {
         <Button type="submit" size="lg" className="w-full" loading={loading}>Sign in</Button>
       </form>
       <p className="mt-8 border-t border-zinc-100 pt-6 text-center text-sm text-zinc-500">
-        Don't have an account?
-        <br />
-        <span className="font-medium text-zinc-700">Ask an administrator to invite you.</span>
+        Don't have an account? <span className="font-medium text-zinc-800">Ask an administrator.</span>
       </p>
     </AuthLayout>
   );
