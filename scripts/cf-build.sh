@@ -6,7 +6,9 @@
 # - No key: plain build (the app shows its "setup required" page).
 set -euo pipefail
 
-if [ -f dist/index.html ]; then
+# A dashboard build step may already have produced dist without VITE_CONVEX_URL. With a key we
+# always rebuild so the app is connected; without one, keep whatever the dashboard built.
+if [ -z "${CONVEX_DEPLOY_KEY:-}" ] && [ -f dist/index.html ]; then
   echo "dist already built; skipping"
   exit 0
 fi
@@ -15,6 +17,7 @@ PROD_BRANCH="${ONEHUB_PRODUCTION_BRANCH:-main}"
 BRANCH="${WORKERS_CI_BRANCH:-}"
 
 if [ -n "${CONVEX_DEPLOY_KEY:-}" ]; then
+  rm -rf dist
   if [ "$BRANCH" = "$PROD_BRANCH" ]; then
     echo "==> $BRANCH: deploying Convex functions and building"
     exec npx convex deploy --cmd 'npm run build'

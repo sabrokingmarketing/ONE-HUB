@@ -8,7 +8,7 @@ directory = "./dist"
 # Unknown paths (client-side routes such as /directors/studio or /f/<form>) serve index.html.
 not_found_handling = "single-page-application"
 
-# Build only if the Workers Builds build step didn't already produce dist. With CONVEX_DEPLOY_KEY set,
+# With CONVEX_DEPLOY_KEY set this always (re)builds dist connected to Convex, and
 # the production branch also deploys the Convex functions; previews only point at that deployment.
 [build]
 command = "bash scripts/cf-build.sh"
