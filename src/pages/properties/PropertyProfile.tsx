@@ -14,7 +14,7 @@ import { ChangedBanner } from "@/components/ChangedBanner";
 import { useAction, uploadFile } from "@/lib/hooks";
 import { errorMessage } from "@/lib/utils";
 import { useCan } from "@/lib/session";
-import { PropertyForm, propertyToDraft, propertyDraftToInput, PROPERTY_TYPES, type PropertyDraft } from "./PropertyForm";
+import { PropertyForm, propertyToDraft, propertyDraftToInput, PROPERTY_TYPES, FUNDS, type PropertyDraft } from "./PropertyForm";
 
 export default function PropertyProfile() {
   const { id } = useParams();
@@ -80,7 +80,7 @@ export default function PropertyProfile() {
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2"><CardHeader title="Property information" /><CardBody>
           <DefinitionList items={[
-            { label: "Type", value: <Badge>{PROPERTY_TYPES[p.type]}</Badge> }, { label: "Location", value: p.location }, { label: "GLA", value: p.gla && `${p.gla.toLocaleString("en-ZA")} m²` },
+            { label: "Type", value: <Badge>{PROPERTY_TYPES[p.type]}</Badge> }, { label: "Fund", value: p.fund && FUNDS[p.fund] }, { label: "Location", value: p.location }, { label: "GLA", value: p.gla && `${p.gla.toLocaleString("en-ZA")} m²` },
             { label: "Description", value: p.description && <span className="whitespace-pre-wrap">{p.description}</span> }, { label: "Contacts", value: p.contacts && <span className="whitespace-pre-wrap">{p.contacts}</span> }, { label: "Notes", value: p.notes && <span className="whitespace-pre-wrap">{p.notes}</span> },
           ]} />
         </CardBody></Card>

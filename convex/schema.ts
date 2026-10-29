@@ -115,6 +115,7 @@ export default defineSchema({
     gla: v.optional(v.number()),
     contacts: v.optional(v.string()),
     notes: v.optional(v.string()),
+    fund: v.optional(v.union(v.literal("enyuka"), v.literal("one_prop"))),
     coverStorageId: v.optional(v.id("_storage")),
     ...meta,
   })
