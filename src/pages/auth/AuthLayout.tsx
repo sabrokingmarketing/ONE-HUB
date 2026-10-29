@@ -7,7 +7,7 @@ export function AuthLayout({ title, subtitle, children }: { title: string; subti
       <div className="mx-auto grid min-h-dvh max-w-[1440px] overflow-hidden bg-white sm:min-h-[calc(100dvh-2rem)] sm:rounded-2xl sm:shadow-pop lg:min-h-[calc(100dvh-3rem)] lg:grid-cols-2">
         {/* Form side */}
         <div className="flex flex-col px-6 py-8 sm:px-12 sm:py-10 lg:px-16 xl:px-24">
-          <Logo className="h-10 self-center" />
+          <Logo className="h-12 self-center sm:h-14" />
 
           <div className="flex flex-1 items-center py-12">
             <div className="mx-auto w-full max-w-sm animate-in">
