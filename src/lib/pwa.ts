@@ -6,6 +6,9 @@ export function registerServiceWorker() {
   if (!("serviceWorker" in navigator) || import.meta.env.DEV) return;
   const update = registerSW({
     onNeedRefresh() {
+      // Signed-out visitors have nothing to lose, so the sign-in page updates itself instead of
+      // showing a stale version until someone notices the toast.
+      if (window.location.pathname === "/login") return void update(true);
       toast("A new version of ONE HUB is available", { duration: Infinity, action: { label: "Refresh", onClick: () => void update(true) } });
     },
   });
