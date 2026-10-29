@@ -3,7 +3,7 @@ import { action, internalAction, internalMutation, internalQuery, query } from "
 import type { MutationCtx } from "./_generated/server";
 import type { Doc } from "./_generated/dataModel";
 import { internal } from "./_generated/api";
-import { deliverEmail, emailMode, type DeliveryError } from "./lib/email";
+import { deliverEmail, domainOf, emailMode, fromAddress, SENDING_DOMAIN, type DeliveryError } from "./lib/email";
 import { nextUtcMidnight, quotaSnapshot, recordSent, utcDay } from "./lib/quota";
 import { requirePermission } from "./lib/auth";
 
@@ -271,9 +271,12 @@ export const checkConnection = action({
   }> => {
     await ctx.runQuery(internal.emails.assertCanManage, {});
     const key = process.env.RESEND_API_KEY;
-    const from = process.env.ONEHUB_EMAIL_FROM ?? null;
-    const fromDomain = from?.match(/@([^>\s]+)/)?.[1]?.toLowerCase() ?? null;
+    const from = fromAddress();
+    const fromDomain = domainOf(from);
     const base = { fromAddress: from, fromDomain, webhookConfigured: !!process.env.RESEND_WEBHOOK_SECRET, mode: emailMode() };
+    if (fromDomain !== SENDING_DOMAIN) {
+      return { ...base, keyConfigured: !!key, keyValid: null, restricted: false, domains: null, fromDomainStatus: null, message: `ONEHUB_EMAIL_FROM must use @${SENDING_DOMAIN}; nothing will send until it does.` };
+    }
     if (!key) {
       return { ...base, keyConfigured: false, keyValid: null, restricted: false, domains: null, fromDomainStatus: null, message: "RESEND_API_KEY is not set on this deployment." };
     }

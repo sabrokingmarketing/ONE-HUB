@@ -137,7 +137,7 @@ describe("transport", () => {
   test("sends an idempotency key and recognises quota errors", async () => {
     process.env.ONEHUB_EMAIL_MODE = "live";
     process.env.RESEND_API_KEY = "re_test";
-    process.env.ONEHUB_EMAIL_FROM = "ONE <n@hub.one.test>";
+    process.env.ONEHUB_EMAIL_FROM = "ONE <n@mailoneholdings.co.za>";
     const fetchMock = vi.fn(async () => new Response(JSON.stringify({ id: "em_1" }), { status: 200 }));
     vi.stubGlobal("fetch", fetchMock);
     expect(await deliverEmail("a@one.test", "s", "<p/>", "onehub-job1")).toEqual({ status: "sent", providerId: "em_1" });
@@ -151,7 +151,7 @@ describe("transport", () => {
   test("credential emails are never redirected in test mode or swallowed in log mode", async () => {
     process.env.ONEHUB_EMAIL_MODE = "test";
     process.env.RESEND_API_KEY = "re_test";
-    process.env.ONEHUB_EMAIL_FROM = "ONE <n@hub.one.test>";
+    process.env.ONEHUB_EMAIL_FROM = "ONE <n@mailoneholdings.co.za>";
     process.env.ONEHUB_EMAIL_TEST_RECIPIENT = "qa@one.test";
     const fetchMock = vi.fn(async () => new Response(JSON.stringify({ id: "em_2" }), { status: 200 }));
     vi.stubGlobal("fetch", fetchMock);
@@ -163,6 +163,21 @@ describe("transport", () => {
 
     delete process.env.ONEHUB_EMAIL_MODE;
     await expect(deliverEmail("a@one.test", "Reset", "<p/>", undefined, { credential: true })).rejects.toMatchObject({ retryable: false });
+  });
+
+  test("only sends from the ONE HUB domain, defaulting to notifications@", async () => {
+    process.env.ONEHUB_EMAIL_MODE = "live";
+    process.env.RESEND_API_KEY = "re_test";
+    delete process.env.ONEHUB_EMAIL_FROM;
+    const fetchMock = vi.fn(async () => new Response(JSON.stringify({ id: "em_3" }), { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+    await deliverEmail("a@one.test", "s", "<p/>");
+    const body = JSON.parse((fetchMock.mock.calls[0] as unknown as [string, RequestInit])[1].body as string);
+    expect(body.from).toBe('"ONE Property Holdings | Internal Communications" <notifications@mailoneholdings.co.za>');
+
+    process.env.ONEHUB_EMAIL_FROM = "Hub <noreply@mailsabroking.co.za>";
+    await expect(deliverEmail("a@one.test", "s", "<p/>")).rejects.toMatchObject({ retryable: false });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   test("log mode never calls the provider", async () => {
