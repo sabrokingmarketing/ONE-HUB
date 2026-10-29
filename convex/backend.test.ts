@@ -201,3 +201,28 @@ describe("go-live security", () => {
     expect(await mia.query(api.users.colleagues, {})).toEqual([]);
   });
 });
+
+describe("property cover image", () => {
+  test("accepts an image, replaces the old one, rejects non-images and can be removed", async () => {
+    const { t, dirA, dirB } = await setup();
+    const store = (type: string) => t.run((ctx) => ctx.storage.store(new Blob([new Uint8Array([1, 2, 3, 4])], { type })));
+    const id = await dirA.as.mutation(api.properties.create, { data: { name: "Southdale", type: "shopping_centre", location: "Johannesburg" } });
+
+    const first = await store("image/jpeg");
+    await dirA.as.mutation(api.properties.setCover, { id, storageId: first });
+    expect((await dirB.as.query(api.properties.get, { id }))?.coverUrl).toBeTruthy();
+    expect((await dirB.as.query(api.properties.list, {}))[0].coverUrl).toBeTruthy();
+
+    const second = await store("image/png");
+    await dirA.as.mutation(api.properties.setCover, { id, storageId: second });
+    expect(await t.run((ctx) => ctx.db.system.get(first))).toBeNull();
+
+    const pdf = await store("application/pdf");
+    expect(await dirA.as.mutation(api.properties.setCover, { id, storageId: pdf })).toEqual({ error: expect.stringMatching(/Cover images/) });
+    expect(await t.run((ctx) => ctx.db.system.get(pdf))).toBeNull();
+
+    await dirA.as.mutation(api.properties.removeCover, { id });
+    expect((await dirB.as.query(api.properties.get, { id }))?.coverUrl).toBeNull();
+    expect(await t.run((ctx) => ctx.db.system.get(second))).toBeNull();
+  });
+});

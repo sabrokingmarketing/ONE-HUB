@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { useQuery } from "convex/react";
-import { Building2, Pencil, Contact, ClipboardList, FileText, Archive, RotateCcw } from "lucide-react";
+import { useMutation, useQuery } from "convex/react";
+import { toast } from "sonner";
+import { Building2, Pencil, Contact, ClipboardList, FileText, Archive, RotateCcw, ImagePlus, Trash2 } from "lucide-react";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { PageHeader, Skeleton, EmptyState, DefinitionList } from "@/components/ui/misc";
@@ -10,7 +11,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sheet } from "@/components/ui/dialog";
 import { ChangedBanner } from "@/components/ChangedBanner";
-import { useAction } from "@/lib/hooks";
+import { useAction, uploadFile } from "@/lib/hooks";
+import { errorMessage } from "@/lib/utils";
 import { useCan } from "@/lib/session";
 import { PropertyForm, propertyToDraft, propertyDraftToInput, PROPERTY_TYPES, type PropertyDraft } from "./PropertyForm";
 
@@ -21,6 +23,11 @@ export default function PropertyProfile() {
   const [editing, setEditing] = useState<{ draft: PropertyDraft; version: number } | null>(null);
   const [update, saving] = useAction(api.properties.update, { success: "Property updated" });
   const [setArchived] = useAction(api.properties.setArchived);
+  const genUrl = useMutation(api.properties.generateUploadUrl);
+  const setCover = useMutation(api.properties.setCover);
+  const [removeCover, removing] = useAction(api.properties.removeCover, { success: "Cover image removed" });
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
   if (p === undefined) return <Skeleton className="h-96 rounded-2xl" />;
   if (p === null) return <EmptyState icon={Building2} title="Property not found" />;
 
@@ -30,8 +37,41 @@ export default function PropertyProfile() {
     </Card>
   );
 
+  const onCover = async (f?: File) => {
+    if (!f) return;
+    setUploading(true);
+    try {
+      const sid = await uploadFile(await genUrl(), f);
+      const r = await setCover({ id: p._id, storageId: sid as Id<"_storage"> });
+      if (r.error) toast.error(r.error);
+      else toast.success("Cover image updated");
+    } catch (err) {
+      toast.error(errorMessage(err));
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  };
+  const canWrite = can("properties.write");
+
   return (
     <>
+      {(p.coverUrl || canWrite) && (
+        <div className="relative mb-6 h-48 overflow-hidden rounded-2xl bg-ink shadow-card sm:h-64 lg:h-72">
+          {p.coverUrl
+            ? <img src={p.coverUrl} alt={`${p.name} cover`} className="absolute inset-0 size-full object-cover" />
+            : <div className="absolute inset-0 grid place-items-center text-center text-white/70">
+                <div><Building2 className="mx-auto size-8 text-brand-400" /><p className="mt-2 text-sm">Add a cover image to show this property at a glance.</p></div>
+              </div>}
+          {canWrite && (
+            <div className="absolute right-3 bottom-3 flex gap-2">
+              <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={(ev) => void onCover(ev.target.files?.[0])} />
+              {p.coverUrl && <Button variant="secondary" size="sm" loading={removing} onClick={() => void removeCover({ id: p._id })}><Trash2 /> Remove</Button>}
+              <Button variant="secondary" size="sm" loading={uploading} onClick={() => fileRef.current?.click()}><ImagePlus /> {p.coverUrl ? "Change cover" : "Upload cover"}</Button>
+            </div>
+          )}
+        </div>
+      )}
       <PageHeader back="/properties" eyebrow={PROPERTY_TYPES[p.type]} title={p.name} description={[p.location, p.province].filter(Boolean).join(", ")}
         actions={can("properties.write") && <>
           {p.archivedAt ? <Button variant="secondary" onClick={() => void setArchived({ id: p._id, archived: false })}><RotateCcw /> Restore</Button> : <Button variant="ghost" onClick={() => void setArchived({ id: p._id, archived: true })}><Archive /> Archive</Button>}

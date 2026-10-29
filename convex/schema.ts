@@ -115,6 +115,7 @@ export default defineSchema({
     gla: v.optional(v.number()),
     contacts: v.optional(v.string()),
     notes: v.optional(v.string()),
+    coverStorageId: v.optional(v.id("_storage")),
     ...meta,
   })
     .index("by_nameKey", ["nameKey"])

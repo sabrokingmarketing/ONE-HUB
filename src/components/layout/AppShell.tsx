@@ -192,10 +192,10 @@ export function AppShell() {
         </div>
       )}
 
-      <header className="sticky top-0 z-20 px-3 pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-5 lg:px-6">
+      <header className="sticky top-0 z-20 bg-canvas px-3 pt-[max(0.75rem,env(safe-area-inset-top))] pb-1 sm:px-5 lg:px-6">
         <div className={cn(
           "flex h-16 items-center gap-3 rounded-2xl px-3 transition-all sm:px-4",
-          scrolled ? "bg-white/80 shadow-card backdrop-blur-xl" : "bg-transparent",
+          scrolled ? "bg-white shadow-card" : "bg-transparent",
         )}>
           <button className="rounded-xl p-2 text-zinc-600 hover:bg-white lg:hidden" onClick={() => setMobileOpen(true)} aria-label="Open menu">
             <MenuIcon className="size-5" />

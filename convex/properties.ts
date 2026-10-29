@@ -45,8 +45,9 @@ export const list = query({
   args: { includeArchived: v.optional(v.boolean()) },
   handler: async (ctx, a) => {
     await requirePermission(ctx, "properties.read");
-    const rows = await ctx.db.query("properties").collect();
-    return rows.filter((p) => a.includeArchived || !p.archivedAt).sort((x, y) => x.name.localeCompare(y.name));
+    const rows = (await ctx.db.query("properties").collect()).filter((p) => a.includeArchived || !p.archivedAt);
+    const withCovers = await Promise.all(rows.map(async (p) => ({ ...p, coverUrl: p.coverStorageId ? await ctx.storage.getUrl(p.coverStorageId) : null })));
+    return withCovers.sort((x, y) => x.name.localeCompare(y.name));
   },
 });
 
@@ -67,6 +68,7 @@ export const get = query({
     ]);
     return {
       ...p,
+      coverUrl: p.coverStorageId ? await ctx.storage.getUrl(p.coverStorageId) : null,
       brokers: brokers.map((b) => ({ _id: b._id, fullName: b.fullName, company: b.company })),
       forms: forms.filter((f) => !f.archivedAt).map((f) => ({ _id: f._id, title: f.title, status: f.status, submissionCount: f.submissionCount })),
       documents: documents.map((d) => ({ _id: d._id, name: d.name, category: d.category })),
@@ -110,5 +112,49 @@ export const setArchived = mutation({
     if (!p) throw notFound("Property");
     await ctx.db.patch(id, { archivedAt: archived ? Date.now() : undefined, updatedBy: user._id, updatedAt: Date.now(), version: p.version + 1 });
     await audit(ctx, user._id, archived ? "archive" : "restore", "properties", id, `${archived ? "Archived" : "Restored"} ${p.name}`);
+  },
+});
+
+export const generateUploadUrl = mutation({
+  args: {},
+  handler: async (ctx) => {
+    await requirePermission(ctx, "properties.write");
+    return await ctx.storage.generateUploadUrl();
+  },
+});
+
+/**
+ * Sets (or replaces) the property's cover image. The previous image is deleted.
+ * A rejected upload is deleted and reported in the result rather than thrown, because
+ * throwing would roll the delete back and leave the file orphaned in storage.
+ */
+export const setCover = mutation({
+  args: { id: v.id("properties"), storageId: v.id("_storage") },
+  handler: async (ctx, { id, storageId }): Promise<{ error?: string }> => {
+    const user = await requirePermission(ctx, "properties.write");
+    const p = await ctx.db.get(id);
+    if (!p) throw notFound("Property");
+    const meta = await ctx.db.system.get(storageId);
+    if (!meta?.contentType?.startsWith("image/") || meta.contentType === "image/svg+xml" || meta.size > 10 * 1024 * 1024) {
+      await ctx.storage.delete(storageId);
+      return { error: "Cover images must be a JPG, PNG or WebP under 10 MB." };
+    }
+    if (p.coverStorageId) await ctx.storage.delete(p.coverStorageId);
+    await ctx.db.patch(id, { coverStorageId: storageId, updatedBy: user._id, updatedAt: Date.now(), version: p.version + 1 });
+    await audit(ctx, user._id, "update", "properties", id, `Changed the cover image of ${p.name}`);
+    return {};
+  },
+});
+
+export const removeCover = mutation({
+  args: { id: v.id("properties") },
+  handler: async (ctx, { id }) => {
+    const user = await requirePermission(ctx, "properties.write");
+    const p = await ctx.db.get(id);
+    if (!p) throw notFound("Property");
+    if (!p.coverStorageId) return;
+    await ctx.storage.delete(p.coverStorageId);
+    await ctx.db.patch(id, { coverStorageId: undefined, updatedBy: user._id, updatedAt: Date.now(), version: p.version + 1 });
+    await audit(ctx, user._id, "update", "properties", id, `Removed the cover image of ${p.name}`);
   },
 });
