@@ -31,9 +31,13 @@ export default function PropertiesPage() {
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {filtered.map((p) => (
             <Link key={p._id} to={`/properties/${p._id}`} className="group overflow-hidden rounded-2xl bg-white shadow-card transition hover:shadow-pop">
-              <div className="relative h-28 bg-ink">
-                <div className="absolute -right-8 -bottom-12 size-40 rounded-full border-[22px] border-brand-500/25 transition group-hover:border-brand-500/40" />
-                <Building2 className="absolute top-5 left-5 size-6 text-brand-400" />
+              <div className="relative h-28 overflow-hidden bg-ink">
+                {p.coverUrl
+                  ? <img src={p.coverUrl} alt="" loading="lazy" className="absolute inset-0 size-full object-cover transition duration-300 group-hover:scale-[1.03]" />
+                  : <>
+                      <div className="absolute -right-8 -bottom-12 size-40 rounded-full border-[22px] border-brand-500/25 transition group-hover:border-brand-500/40" />
+                      <Building2 className="absolute top-5 left-5 size-6 text-brand-400" />
+                    </>}
               </div>
               <div className="p-5">
                 <Badge>{PROPERTY_TYPES[p.type]}</Badge>
