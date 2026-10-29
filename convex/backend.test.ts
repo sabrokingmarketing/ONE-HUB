@@ -226,3 +226,11 @@ describe("property cover image", () => {
     expect(await t.run((ctx) => ctx.db.system.get(second))).toBeNull();
   });
 });
+
+test("property fund is saved and can be cleared", async () => {
+  const { dirA, dirB } = await setup();
+  const id = await dirA.as.mutation(api.properties.create, { data: { name: "Hatfield Plaza", type: "shopping_centre", location: "Pretoria", fund: "enyuka" } });
+  expect((await dirB.as.query(api.properties.list, {}))[0].fund).toBe("enyuka");
+  await dirA.as.mutation(api.properties.update, { id, expectedVersion: 1, data: { name: "Hatfield Plaza", type: "shopping_centre", location: "Pretoria" } });
+  expect((await dirB.as.query(api.properties.get, { id }))?.fund).toBeUndefined();
+});

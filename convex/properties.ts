@@ -18,6 +18,7 @@ const input = v.object({
   gla: v.optional(v.number()),
   contacts: v.optional(v.string()),
   notes: v.optional(v.string()),
+  fund: v.optional(v.union(v.literal("enyuka"), v.literal("one_prop"))),
 });
 
 function normalise(i: typeof input.type) {
@@ -27,7 +28,7 @@ function normalise(i: typeof input.type) {
   return {
     name, nameKey: nameKey(name), type: i.type, location,
     province: clean(i.province), description: clean(i.description), gla: i.gla,
-    contacts: clean(i.contacts), notes: clean(i.notes),
+    contacts: clean(i.contacts), notes: clean(i.notes), fund: i.fund,
   };
 }
 
